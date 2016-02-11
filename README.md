@@ -1,5 +1,7 @@
 MinSikSon
 ============================
+* 샘플 App 제작을 위해 SDNHub 에서 받은 single switch 소스 코드의 일부를 수정함.
+
 * This is modified by MinSikSon.
 * This is sample application.
 
