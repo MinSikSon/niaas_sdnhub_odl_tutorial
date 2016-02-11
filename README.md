@@ -1,3 +1,6 @@
+This is modified by MinSikSon.
+This is sample application.
+
 SDNHub Opendaylight Tutorial
 ============================
 This is the OpenDaylight project source code used by the [our tutorial](http://sdnhub.org/tutorials/opendaylight/).
