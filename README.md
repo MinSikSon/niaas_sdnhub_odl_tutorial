@@ -1,5 +1,7 @@
-This is modified by MinSikSon.
-This is sample application.
+MinSikSon
+============================
+* This is modified by MinSikSon.
+* This is sample application.
 
 SDNHub Opendaylight Tutorial
 ============================

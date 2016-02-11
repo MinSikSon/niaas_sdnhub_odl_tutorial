@@ -20,3 +20,6 @@ MANIFEST.MF
 *.jar
 *.war
 *.ear
+
+# SMS #
+git_help.sh
