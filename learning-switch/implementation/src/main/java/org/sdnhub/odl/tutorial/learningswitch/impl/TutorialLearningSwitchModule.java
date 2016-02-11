@@ -25,13 +25,19 @@ public class TutorialLearningSwitchModule extends org.sdnhub.odl.tutorial.learni
     @Override
     public java.lang.AutoCloseable createInstance() {
     	//Get all MD-SAL provider objects
-        DataBroker dataBroker = getDataBrokerDependency();
-        RpcProviderRegistry rpcRegistry = getRpcRegistryDependency();
-        NotificationProviderService notificationService = getNotificationServiceDependency();
-        
-        TutorialL2Forwarding tutorialL2Forwarding = new TutorialL2Forwarding(dataBroker, notificationService, rpcRegistry);
-        LOG.info("Tutorial Learning Switch (instance {}) initialized.", tutorialL2Forwarding);
-        return tutorialL2Forwarding;
+		DataBroker dataBroker = getDataBrokerDependency();
+		RpcProviderRegistry rpcRegistry = getRpcRegistryDependency();
+		NotificationProviderService notificationService = getNotificationServiceDependency();
+
+		TutorialL2Forwarding tutorialL2Forwarding = new TutorialL2Forwarding(dataBroker, notificationService, rpcRegistry);
+		LOG.info("[SMS_TEST] Tutorial Learning Switch (instance {}) initialized.", tutorialL2Forwarding);
+//		LOG.info("[SMS_TEST] +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//		LOG.info("[SMS_TEST] dataBroker: {}", dataBroker);
+//		LOG.info("[SMS_TEST] rpcRegistry: {}", rpcRegistry);
+//		LOG.info("[SMS_TEST] notificationService: {}", notificationService);
+//		LOG.info("[SMS_TEST] -------------------------------------------------------------------------");
+		
+		return tutorialL2Forwarding;
     }
 
 }
