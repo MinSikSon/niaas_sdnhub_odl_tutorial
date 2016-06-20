@@ -25,4 +25,4 @@ MANIFEST.MF
 git_help.sh
 sms_mornitoring
 admin/log/*.log
-
+admin/*.txt

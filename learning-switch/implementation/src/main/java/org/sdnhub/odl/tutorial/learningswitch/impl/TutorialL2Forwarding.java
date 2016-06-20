@@ -253,7 +253,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			String ttl = PacketParsingUtils.rawttlToString(ttlRaw);
 			
 			if(stringEtherTypeHex.equals("0800") && ttl.equals("40")){
-				LOG.debug("[TEST] ttl: {}", ttl);	
+//				LOG.debug("[TEST] ttl: {}", ttl);	
 				this.macTable[switchNodeId_number].put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
 				
 	//			LOG.debug("macTable++++++++++++++++++++++++++++++++++++++++++++++++++++");
