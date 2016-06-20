@@ -50,7 +50,8 @@ public class MatchUtils {
     public static final long LLDP_LONG = (long) 0x88CC;
     public static final long VLANTAGGED_LONG = (long) 0x8100;
     public static final long MPLSUCAST_LONG = (long) 0x8847;
-
+    private static int LOG_SWITCH = 0; 
+    
     /**
      * Create Ingress Port Match dpidLong, inPort
      *
@@ -62,7 +63,7 @@ public class MatchUtils {
     public static MatchBuilder createInPortMatch(MatchBuilder matchBuilder, Long dpidLong, Long inPort) {
 
         NodeConnectorId ncid = new NodeConnectorId("openflow:" + dpidLong + ":" + inPort);
-        logger.debug("createInPortMatch() Node Connector ID is - Type=openflow: DPID={} inPort={} ", dpidLong, inPort);
+        if(LOG_SWITCH == 1) logger.debug("createInPortMatch() Node Connector ID is - Type=openflow: DPID={} inPort={} ", dpidLong, inPort);
         matchBuilder.setInPort(ncid);
 
         return matchBuilder;
@@ -76,7 +77,7 @@ public class MatchUtils {
      * @return matchBuilder Map MatchBuilder Object with a match
      */
     public static MatchBuilder createInPortMatch(MatchBuilder matchBuilder, NodeConnectorId ncId) {
-        logger.debug("createInPortMatch() Node Connector ID is {} ", ncId);
+    	if(LOG_SWITCH == 1) logger.debug("createInPortMatch() Node Connector ID is {} ", ncId);
         matchBuilder.setInPort(ncId);
 
         return matchBuilder;

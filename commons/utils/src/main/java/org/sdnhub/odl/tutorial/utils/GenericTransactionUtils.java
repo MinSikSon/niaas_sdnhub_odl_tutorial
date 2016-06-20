@@ -18,7 +18,8 @@ import com.google.common.util.concurrent.CheckedFuture;
 
 public final class GenericTransactionUtils {
     static final Logger logger = LoggerFactory.getLogger(GenericTransactionUtils.class);
-
+    private static int LOG_SWITCH = 0; 
+    
     public static <T extends DataObject> boolean writeData(DataBroker dataBroker, LogicalDatastoreType logicalDatastoreType, 
     		InstanceIdentifier<T> iid, T dataObject, boolean isAdd) {
         Preconditions.checkNotNull(dataBroker);
@@ -35,12 +36,16 @@ public final class GenericTransactionUtils {
         }
         CheckedFuture<Void, TransactionCommitFailedException> commitFuture = modification.submit();
         try {
+//        	logger.debug("piolink_test|GenericTransactionUtils|writeData 66666666666666666666666666666666666666");
             commitFuture.checkedGet();
-            logger.debug("Transaction success for {} of object {}", (isAdd) ? "add" : "delete", dataObject);
+            if(LOG_SWITCH == 1) logger.debug("Transaction success for {} of object {}", (isAdd) ? "add" : "delete", dataObject);
+//            logger.debug("piolink_test|GenericTransactionUtils|writeData 77777777777777777777777777777777777777");
             return true;
         } catch (Exception e) {
+//        	logger.debug("piolink_test|GenericTransactionUtils|writeData 88888888888888888888888888888888888888");
             logger.error("Transaction failed with error {} for {} of object {}", e.getMessage(), (isAdd) ? "add" : "delete", dataObject);
             modification.cancel();
+//            logger.debug("piolink_test|GenericTransactionUtils|writeData 9999999999999999999999999999999999999");
             return false;
         }
     }

@@ -3,311 +3,182 @@ package org.sdnhub.odl.tutorial.learningswitch.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SMS_Parser_IpAddr extends SMS_Parser{
-	private SMS_Parser_IpAddr(){
+public abstract class SMS_Parser_IpAddr extends SMS_Parser{
+	private static final int IP_ADDRESS_SIZE = 4;
+//	private static int SRC_IP_START_POSITION;
+//	private static int SRC_IP_END_POSITION;
+//	private static int DST_IP_START_POSITION;
+//	private static int DST_IP_END_POSITION;
+//	private SMS_Parser_IpAddr(){
+//	}
+	
+	/**
+     * @param payload, stringEtherTypeHex
+     * @return byteArray_SrcIp[IP_ADDRESS_SIZE]
+     */
+	public static byte[] get_byteArray_SrcIp(byte[] payload) {
+		String stringEtherTypeHex = SMS_Parser_MacAddr.get_stringEtherTypeHex(payload);
+		int LOG_TEST = 0; // SMS
+		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		byte[] byteArray_SrcIp = new byte[IP_ADDRESS_SIZE];
+		if(stringEtherTypeHex.equals("0800")){ // IPv4
+			if(LOG_TEST == 1) LOG.debug("  | srcIp: {}.{}.{}.{}", payload[26],payload[27],payload[28],payload[29]);
+			for(int i = 0 ; i < IP_ADDRESS_SIZE ; i++){
+				byteArray_SrcIp[i] = payload[26+i];
+			}
+		}else if(stringEtherTypeHex.equals("0806")){ // ARP
+			if(LOG_TEST == 1) LOG.debug("  | srcIp: {}.{}.{}.{}", payload[28],payload[29],payload[30],payload[31]);
+			for(int i = 0 ; i < IP_ADDRESS_SIZE ; i++){
+				byteArray_SrcIp[i] = payload[28+i];
+			}
+		}else if(stringEtherTypeHex.equals("86dd")){ // IPv6
+			if(LOG_TEST == 1) LOG.debug("  | srcIp: ?.?.?.?.?.?");
+		}else if(stringEtherTypeHex.equals("88CC")){ // LLDP
+			if(LOG_TEST == 1) LOG.debug("  | srcIp: ?.?.?.?");
+		}else if(stringEtherTypeHex.equals("8808")){ // Ethernet flow control
+			if(LOG_TEST == 1) LOG.debug("  | srcIp: ?.?.?.?");
+		}else{
+			if(LOG_TEST == 1) LOG.debug("  | srcIp: ?.?.?.?");
+		}
+		return byteArray_SrcIp;
 	}
 	
+	/**
+     * @param payload, stringEtherTypeHex
+     * @return byteArray_DstIp[IP_ADDRESS_SIZE]
+     */
+	public static byte[] get_byteArray_DstIp(byte[] payload) {
+		String stringEtherTypeHex = SMS_Parser_MacAddr.get_stringEtherTypeHex(payload);
+		int LOG_TEST = 0; // SMS
+		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		byte[] byteArray_DstIp = new byte[IP_ADDRESS_SIZE];
+		if(stringEtherTypeHex.equals("0800")){ // IPv4
+			if(LOG_TEST == 1) LOG.debug("  | dstIp: {}.{}.{}.{}", payload[30],payload[31],payload[32],payload[33]);
+			for(int i = 0 ; i < IP_ADDRESS_SIZE ; i++){
+				byteArray_DstIp[i] = payload[30+i];
+			}
+		}else if(stringEtherTypeHex.equals("0806")){ // ARP
+			if(LOG_TEST == 1) LOG.debug("  | dstIp: {}.{}.{}.{}", payload[38],payload[39],payload[40],payload[41]);
+			for(int i = 0 ; i < IP_ADDRESS_SIZE ; i++){
+				byteArray_DstIp[i] = payload[38+i];
+			}
+		}else if(stringEtherTypeHex.equals("86dd")){ // IPv6
+			if(LOG_TEST == 1) LOG.debug("  | dstIp: ?.?.?.?.?.?");
+		}else if(stringEtherTypeHex.equals("88CC")){ // LLDP
+			if(LOG_TEST == 1) LOG.debug("  | dstIp: ?.?.?.?");
+		}else if(stringEtherTypeHex.equals("8808")){ // Ethernet flow control
+			if(LOG_TEST == 1) LOG.debug("  | dstIp: ?.?.?.?");
+		}else{
+			if(LOG_TEST == 1) LOG.debug("  | dstIp: ?.?.?.?");
+		}
+		return byteArray_DstIp;
+	}
+	
+	/**
+     * @param byteArray[IP_ADDRESS_SIZE]
+     * @return intArray[IP_ADDRESS_SIZE]
+     */
 	public static int[] ipAddr_byteArray_to_intArray(byte[] byteArray){
 		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
-		int[] intArray = new int[4];
-		if(byteArray.length != 4){
+		int[] intArray = new int[IP_ADDRESS_SIZE];
+		if(byteArray.length != IP_ADDRESS_SIZE){
 			LOG.debug("(Error) ipAddr_byteArray_to_intArray");
 			return null; // error
 		}
-		for(int i = 0 ; i < 4 ; i++){
+		for(int i = 0 ; i < IP_ADDRESS_SIZE ; i++){
 			intArray[i] = byte_to_int(byteArray[i]);
 		}
 		return intArray;
 	}
+	
+	/**
+     * @param intArray[IP_ADDRESS_SIZE]
+     * @return byteArray[IP_ADDRESS_SIZE]
+     */
 	public static byte[] ipAddr_intArray_to_byteArray(int[] intArray){
 		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
-		byte[] byteArray = new byte[4];
-		if(intArray.length != 4) {
+		byte[] byteArray = new byte[IP_ADDRESS_SIZE];
+		if(intArray.length != IP_ADDRESS_SIZE) {
 			LOG.debug("(Error) ipAddr_intArray_to_byteArray");
 			return null; // error
 		}
-		for(int i = 0 ; i< 4 ; i++){
+		for(int i = 0 ; i< IP_ADDRESS_SIZE ; i++){
 			if(-128 > intArray[i] || intArray[i] > 255) {
 				System.out.println("SMS_Parser_IpAddr------------------------------here 31");
 				System.out.println("intArray["+i+"]: " + intArray[i]);
 			}
 		}
-		for(int i = 0 ; i < 4 ; i++){
+		for(int i = 0 ; i < IP_ADDRESS_SIZE ; i++){
 			byteArray[i] = int_to_byte(intArray[i]);
 		}
 		return byteArray;
 	}
-	public static int[] ipAddr_string_to_intArray(String stringValue){
+	
+	/**
+     * @param stringIp
+     * @return intArray[IP_ADDRESS_SIZE]
+     */
+	public static int[] ipAddr_stringIp_to_intArray(String stringIp){
 		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
-		int[] intArray = new int[4];
-		String[] split_stringValue = stringValue.split("\\.");
+		int[] intArray = new int[IP_ADDRESS_SIZE];
+		String[] split_stringValue = stringIp.split("\\.");
 		// the number of "." is three.
-		if(split_stringValue.length != 4){
+		if(split_stringValue.length != IP_ADDRESS_SIZE){
 			LOG.debug("(Error) ipAddr_byteArray_to_intArray");
 			return null; // error
 		}
-		for(int i = 0 ; i < 4 ; i ++){
+		for(int i = 0 ; i < IP_ADDRESS_SIZE ; i ++){
 			intArray[i] = Integer.parseInt(split_stringValue[i]);
 		}
 		return intArray;
 	}
-	public static String ipAddr_intArray_to_string(int[] intArray){
+	
+	/**
+     * @param intArray[IP_ADDRESS_SIZE]
+     * @return stringIp
+     */
+	public static String ipAddr_intArray_to_stringIp(int[] intArray){
 		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
-		String stringValue;
-		if(intArray.length != 4) {
+		String stringIp;
+		if(intArray.length != IP_ADDRESS_SIZE) {
 			LOG.debug("(Error) ipAddr_intArray_to_byteArray");
 			return null; // error
 		}
-		stringValue = intArray[0] + "." + intArray[1] + "." + intArray[2] + "." + intArray[3];
+		stringIp = intArray[0] + "." + intArray[1] + "." + intArray[2] + "." + intArray[3];
 		
-		return stringValue;
+		return stringIp;
 	}
 	
-	public static byte[] ipv4_Calculate_Checksum(byte[] byteIpHeader){
+	/**
+     * @param byteArray[IP_ADDRESS_SIZE]
+     * @return stringIp
+     */
+	public static String ipAddr_byteArray_to_stringIp(byte[] byteArray) {
+		String stringIp = "";
+		for(int i = 0 ; i < byteArray.length ; i ++){
+			stringIp = stringIp.concat(Integer.toString(0xff & byteArray[i]));
+			if(i != (byteArray.length - 1)){
+				stringIp = stringIp.concat(".");
+			}
+		}
+		return stringIp;
+	}
+	
+	/**
+     * @param stringIp
+     * @return byteArray[IP_ADDRESS_SIZE]
+     */
+	public static byte[] ipAddr_stringIp_to_byteArray(String stringIp) {
 		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
-		
-		int SMS_LOG = 0;
-		// variable
-		int[] intIpHeader = new int[20];
-		int upperMask = 0x0000ff00;
-		int lowerMask = 0x000000ff;
-		int complementMask = 0x000000ff;
-		int[] sumIpHeader = new int[2];
-		byte[] byteChecksumValue = new byte[2];
-		int carry_0;
-		int carry_1;
-		// store input checksum value. (122, 69)
-		if(SMS_LOG == 1) LOG.debug("[before][byteIpHeader]:  {} {}", byteIpHeader[10], byteIpHeader[11]);
-		byteChecksumValue[0] = byteIpHeader[10];
-		byteChecksumValue[1] = byteIpHeader[11];
-		if(SMS_LOG == 1) System.out.println("ipHeader size: " + byteIpHeader.length);
-		if(byteIpHeader.length != 20){
-			if(SMS_LOG == 1) System.out.println("Error: input size error");
-			LOG.debug("Error: input size error");
-			return byteChecksumValue;
+		byte[] byteArray = new byte[6];
+		String[] split_stringValue = stringIp.split("\\.");
+		if(split_stringValue.length != 6){
+			LOG.debug("(Error) ipAddr_byteArray_to_intArray");
+			return null; // error
 		}
-		// change checksum value to ZERO
-		byteIpHeader[10] = 0;
-		byteIpHeader[11] = 0;
-		// change byte to int Value
-		for(int i = 0 ; i < 20 ; i++){
-			intIpHeader[i] = byte_to_int(byteIpHeader[i]);
+		for(int i = 0 ; i < 6 ; i ++){
+			byteArray[i] = int_to_byte(Integer.parseInt(split_stringValue[i]));
 		}
-		
-		carry_0 = 0;
-		carry_1 = 0;
-		// sum int Values
-		for(int i = 0 ; i < 20 ; i++){
-			if(i % 2 == 0){
-				sumIpHeader[0] = sumIpHeader[0] + intIpHeader[i];
-				carry_0 = (sumIpHeader[0] & upperMask) >> 8;
-				sumIpHeader[0] = sumIpHeader[0] & lowerMask;
-				sumIpHeader[1] = sumIpHeader[1] + carry_0;
-			}else if(i % 2 == 1){
-				sumIpHeader[1] = sumIpHeader[1] + intIpHeader[i];
-				carry_1 = (sumIpHeader[1] & upperMask) >> 8;
-				sumIpHeader[1] = sumIpHeader[1] & lowerMask;
-				sumIpHeader[0] = sumIpHeader[0] + carry_1;
-				if(sumIpHeader[0] >= 256){
-					carry_0 = (sumIpHeader[0] & upperMask) >> 8;
-					sumIpHeader[0] = sumIpHeader[0] & lowerMask;
-					sumIpHeader[1] = sumIpHeader[1] + carry_0;
-				}
-			}
-			carry_0 = 0;
-			carry_1 = 0;
-		}
-		if(SMS_LOG == 1) System.out.println("sumIpHeader[0]:  " + sumIpHeader[0]);
-		if(SMS_LOG == 1) System.out.println("sumIpHeader[1]:  " + sumIpHeader[1]);
-		
-		// 1's complement
-		if(SMS_LOG == 1) System.out.println("<1's complement>");
-		sumIpHeader[0] = sumIpHeader[0]^complementMask;
-		sumIpHeader[1] = sumIpHeader[1]^complementMask;
-		if(SMS_LOG == 1) System.out.println(sumIpHeader[0]);
-		if(SMS_LOG == 1) System.out.println(sumIpHeader[1]);
-		// change int to byte
-		if(-128 > sumIpHeader[0] || sumIpHeader[0] > 255) {
-			System.out.println("SMS_Parser_IpAddr------------------------------here 128");
-			System.out.println("sumIpHeader[0]: " + sumIpHeader[0]);
-		}
-		if(-128 > sumIpHeader[1] || sumIpHeader[1] > 255) {
-			System.out.println("SMS_Parser_IpAddr------------------------------here 128");
-			System.out.println("sumIpHeader[1]: " + sumIpHeader[1]);
-		}
-		byteChecksumValue[0] = int_to_byte(sumIpHeader[0]);
-		byteChecksumValue[1] = int_to_byte(sumIpHeader[1]);
-		if(SMS_LOG == 1) System.out.println("byteChecksumValue[0]:  " + byteChecksumValue[0]);
-		if(SMS_LOG == 1) System.out.println("byteChecksumValue[1]:  " + byteChecksumValue[1]);
-		return byteChecksumValue;
-	}
-	
-	
-	public static byte[] tcp_Calculate_Checksum(byte[] payload, String srcIp, String dstIp){
-		int SMS_LOG = 0;
-		// TCP Header: 40byte // 20byte + 20byte(optional)
-		// checksum: -123, -5 (byteTcpHeader[16], byteTcpHeader[17])	
-		// variable
-		byte[] byteTcpHeader = new byte[payload.length];
-		byte[] bytePseudoHeaderSrcIp = new byte[4];
-		byte[] bytePseudoHeaderDstIp = new byte[4];
-		byte bytePseudoHeaderReserved = 0;
-		byte bytePseudoHeaderProtocol = 6; // tcp = 6
-//		byte bytePseudoHeaderTcpLenth = int_to_byte(byteTcpHeader.length);
-		byte[] bytePseudoHeaderTcpLenth = new byte[2];
-		int intPseudoHeaderTcpLenth;
-		int[] intPseudoHeader = new int[12];
-		int[] intTcpHeader = new int[payload.length];
-		int upperMask = 0x0000ff00;
-		int lowerMask = 0x000000ff;
-		int complementMask = 0x000000ff;
-		int[] sumTcpHeader = new int[2];
-		int[] sumPseudoHeader = new int[2];
-		byte[] byteChecksumValue = new byte[2];
-		int carry_0;
-		int carry_1;
-		
-		//+++++++++++++++++++++++++++++++++
-		int intIpHeaderLength = (byte_to_int(payload[14]) & 0x0f) * 4; // 
-		if(SMS_LOG == 1) System.out.println("intIpHeaderLength: " + intIpHeaderLength);
-		byte[] byteIpTotalHeaderLength = new byte[2];
-		int intIpTotalHeaderLength;
-		int intTcpPacketSize;
-		byteIpTotalHeaderLength[0] = payload[16];
-		byteIpTotalHeaderLength[1] = payload[17];
-		intIpTotalHeaderLength = byte_to_int(payload[16]) * 256 + byte_to_int(payload[17]);
-		if(SMS_LOG == 1) System.out.println(intIpTotalHeaderLength);
-		intTcpPacketSize = intIpTotalHeaderLength - intIpHeaderLength;
-		if(SMS_LOG == 1) System.out.println(intTcpPacketSize);
-		//---------------------------------
-		
-		// extract byteTcpHeader from payload
-		for(int i = 0 ; i < intTcpPacketSize ; i++){
-			byteTcpHeader[i] = payload[34 + i]; //
-//			LOG.debug("[byteTcpHeader[i]]:  {}", byteTcpHeader[i]);
-		}
-		
-		// store checksum data
-		byteChecksumValue[0] = byteTcpHeader[16];
-		byteChecksumValue[1] = byteTcpHeader[17];
-//		if(SMS_LOG == 1) System.out.println("tcpHeader size: " + (byte_to_int(byteTcpHeader[12]) / 4));
-		if(SMS_LOG == 1) if(SMS_LOG == 1) System.out.println("intTcpPacketSize: " + intTcpPacketSize);
-		// input pseudo Header data
-		bytePseudoHeaderSrcIp = ipAddr_intArray_to_byteArray(ipAddr_string_to_intArray(srcIp)); // 
-		bytePseudoHeaderDstIp = ipAddr_intArray_to_byteArray(ipAddr_string_to_intArray(dstIp)); // 
-//		intPseudoHeaderTcpLenth = (byte_to_int(byteTcpHeader[12]) / 4);
-		intPseudoHeaderTcpLenth = intTcpPacketSize;
-		if(-128 > ((intPseudoHeaderTcpLenth & upperMask) >> 8) || ((intPseudoHeaderTcpLenth & upperMask) >> 8) > 255) {
-			System.out.println("SMS_Parser_IpAddr------------------------------here 204");
-			System.out.println("(intPseudoHeaderTcpLenth & upperMask) >> 8: " + ((intPseudoHeaderTcpLenth & upperMask) >> 8));
-		}
-		if(-128 > (intPseudoHeaderTcpLenth & lowerMask) || (intPseudoHeaderTcpLenth & lowerMask) > 255) {
-			System.out.println("SMS_Parser_IpAddr------------------------------here 208");
-			System.out.println("(intPseudoHeaderTcpLenth & lowerMask): " + (intPseudoHeaderTcpLenth & lowerMask));
-		}
-		bytePseudoHeaderTcpLenth[0] = int_to_byte((intPseudoHeaderTcpLenth & upperMask) >> 8);
-		bytePseudoHeaderTcpLenth[1] = int_to_byte(intPseudoHeaderTcpLenth & lowerMask);
-		// PseudoHead change byte to int
-		intPseudoHeader[0] = byte_to_int(bytePseudoHeaderSrcIp[0]);
-		intPseudoHeader[1] = byte_to_int(bytePseudoHeaderSrcIp[1]);
-		intPseudoHeader[2] = byte_to_int(bytePseudoHeaderSrcIp[2]);
-		intPseudoHeader[3] = byte_to_int(bytePseudoHeaderSrcIp[3]);
-		intPseudoHeader[4] = byte_to_int(bytePseudoHeaderDstIp[0]);
-		intPseudoHeader[5] = byte_to_int(bytePseudoHeaderDstIp[1]);
-		intPseudoHeader[6] = byte_to_int(bytePseudoHeaderDstIp[2]);
-		intPseudoHeader[7] = byte_to_int(bytePseudoHeaderDstIp[3]);
-		intPseudoHeader[8] = byte_to_int(bytePseudoHeaderReserved);
-		intPseudoHeader[9] = byte_to_int(bytePseudoHeaderProtocol);
-		intPseudoHeader[10] = byte_to_int(bytePseudoHeaderTcpLenth[0]);
-		intPseudoHeader[11] = byte_to_int(bytePseudoHeaderTcpLenth[1]);
-		// sum Pseudo Header int Values
-		carry_0 = 0;
-		carry_1 = 0;
-		for(int i = 0 ; i < 12 ; i++){
-			if(i % 2 == 0){
-				sumPseudoHeader[0] = sumPseudoHeader[0] + intPseudoHeader[i];
-				carry_0 = (sumPseudoHeader[0] & upperMask) >> 8;
-				sumPseudoHeader[0] = sumPseudoHeader[0] & lowerMask;
-				sumPseudoHeader[1] = sumPseudoHeader[1] + carry_0;
-			}else if(i % 2 == 1){
-				sumPseudoHeader[1] = sumPseudoHeader[1] + intPseudoHeader[i];
-				carry_1 = (sumPseudoHeader[1] & upperMask) >> 8;
-				sumPseudoHeader[1] = sumPseudoHeader[1] & lowerMask;
-				sumPseudoHeader[0] = sumPseudoHeader[0] + carry_1;
-			}
-//			System.out.println("carry_0: " + carry_0 +", carry_1: "+ carry_1 + ", sumPseudoHeader[0]: " + sumPseudoHeader[0] + ", sumPseudoHeader[1]: " + sumPseudoHeader[1]+ ", intPseudoHeader["+i+"]:" + intPseudoHeader[i]);
-			carry_0 = 0;
-			carry_1 = 0;
-		}
-//		if(SMS_LOG == 1) System.out.println("sumPseudoHeader[0]:  " + sumPseudoHeader[0]);
-//		if(SMS_LOG == 1) System.out.println("sumPseudoHeader[1]:  " + sumPseudoHeader[1]);
-		// add sumPseudoHeader to sumTcpHeader
-		sumTcpHeader[0] = sumPseudoHeader[0];
-		sumTcpHeader[1] = sumPseudoHeader[1];
-		// change checksum value to ZERO
-		byteTcpHeader[16] = 0;
-		byteTcpHeader[17] = 0;
-		// change byte to int Value
-//		for(int i = 0 ; i < (byte_to_int(byteTcpHeader[12]) / 4) ; i++){
-		for(int i = 0 ; i < intTcpPacketSize ; i++){
-			intTcpHeader[i] = byte_to_int(byteTcpHeader[i]);
-//			System.out.println("intTcpHeader[" + i + "]: " + intTcpHeader[i]);
-		}
-
-//////////////////////////// edit++++++++++++++++++++++++++++++++++++++
-		// sum int Values
-		carry_0 = 0;
-		carry_1 = 0;
-		if(SMS_LOG == 1) System.out.println("carry_0: " + carry_0 +", carry_1: "+ carry_1 + ", sumTcpHeader[0]: " + sumTcpHeader[0]  + ", sumTcpHeader[1]: " + sumTcpHeader[1]);
-//		for(int i = 0 ; i < (byte_to_int(byteTcpHeader[12]) / 4) ; i++){
-		for(int i = 0 ; i < intTcpPacketSize ; i++){
-			if(i % 2 == 0){
-				sumTcpHeader[0] = sumTcpHeader[0] + intTcpHeader[i];
-				carry_0 = (sumTcpHeader[0] & upperMask) >> 8;
-				sumTcpHeader[0] = sumTcpHeader[0] & lowerMask;
-				sumTcpHeader[1] = sumTcpHeader[1] + carry_0;
-			}else if(i % 2 == 1){
-				sumTcpHeader[1] = sumTcpHeader[1] + intTcpHeader[i];
-				carry_1 = (sumTcpHeader[1] & upperMask) >> 8;
-				sumTcpHeader[1] = sumTcpHeader[1] & lowerMask;
-				sumTcpHeader[0] = sumTcpHeader[0] + carry_1;
-				///// +++ edit
-				if(sumTcpHeader[0] >= 256){
-					carry_0 = (sumTcpHeader[0] & upperMask) >> 8;
-					sumTcpHeader[0] = sumTcpHeader[0] & lowerMask;
-					sumTcpHeader[1] = sumTcpHeader[1] + carry_0;
-				}
-				///// --- edit
-			}
-			if(SMS_LOG == 1) System.out.println(i+")("+i%2 + ") carry_0: " + carry_0 +", carry_1: "+ carry_1 + ", sumTcpHeader[0]: " + sumTcpHeader[0]  + ", sumTcpHeader[1]: " + sumTcpHeader[1]+ ", intTcpHeader["+i+"]:" + intTcpHeader[i]);
-			carry_0 = 0;
-			carry_1 = 0;
-		}
-		if(SMS_LOG == 1) System.out.println("sumTcpHeader[0]:  " + sumTcpHeader[0]);
-		if(SMS_LOG == 1) System.out.println("sumTcpHeader[1]:  " + sumTcpHeader[1]);
-		
-////////////////////////////edit--------------------------------------
-		// 1's complement
-		if(SMS_LOG == 1) System.out.println("<1's complement>");
-		sumTcpHeader[0] = sumTcpHeader[0]^complementMask;
-		sumTcpHeader[1] = sumTcpHeader[1]^complementMask;
-		if(SMS_LOG == 1) System.out.println(sumTcpHeader[0]);
-		if(SMS_LOG == 1) System.out.println(sumTcpHeader[1]);
-		// change int to byte
-		if(-128 > sumTcpHeader[0] || sumTcpHeader[0] > 255) {
-			System.out.println("SMS_Parser_IpAddr------------------------------here 279");
-			System.out.println("sumTcpHeader[0]: " + sumTcpHeader[0]);
-		}
-		if(-128 > sumTcpHeader[1] || sumTcpHeader[1] > 255) {
-			System.out.println("SMS_Parser_IpAddr------------------------------here 279");
-			System.out.println("sumTcpHeader[1]: " + sumTcpHeader[1]);
-		}
-		byteChecksumValue[0] = int_to_byte(sumTcpHeader[0]);
-		byteChecksumValue[1] = int_to_byte(sumTcpHeader[1]);
-		
-		if(SMS_LOG == 1) System.out.println("byteChecksumValue[0]:  " + byteChecksumValue[0]);
-		if(SMS_LOG == 1) System.out.println("byteChecksumValue[1]:  " + byteChecksumValue[1]);
-		return byteChecksumValue;
-		
+		return byteArray;
 	}
 }

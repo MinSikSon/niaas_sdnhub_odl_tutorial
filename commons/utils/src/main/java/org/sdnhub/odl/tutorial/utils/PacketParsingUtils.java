@@ -52,10 +52,29 @@ public abstract class PacketParsingUtils {
      */
     private static final int ETHER_TYPE_END_POSITION = 14;
 
+// SMS NIaaS
+    /**
+     * start/end position of ttl in array
+     */
+    private static final int IP_TTL_START_POSITION = 20;
+    private static final int IP_TTL_END_POSITION = 28;
+    private static final int TTL_SIZE = IP_TTL_END_POSITION - IP_TTL_START_POSITION;
+// SMS NIaaS END
+    
     private PacketParsingUtils() {
         //prohibite to instantiate this class
     }
 
+// SMS NIaaS    
+    /**
+     * @param payload
+     * @return TTL
+     */
+    public static byte[] extractIpHeaderTTL(final byte[] payload) {
+        return Arrays.copyOfRange(payload, IP_TTL_START_POSITION, IP_TTL_END_POSITION);
+    }
+// SMS NIaaS END
+    
     /**
      * @param payload
      * @return destination MAC address
@@ -74,7 +93,7 @@ public abstract class PacketParsingUtils {
 
     /**
      * @param payload
-     * @return source MAC address
+     * @return etherType
      */
     public static byte[] extractEtherType(final byte[] payload) {
         return Arrays.copyOfRange(payload, ETHER_TYPE_START_POSITION, ETHER_TYPE_END_POSITION);
@@ -107,7 +126,23 @@ public abstract class PacketParsingUtils {
         }
         return null;
     }
-
+    
+// NIaaS SMS
+    public static String rawttlToString(byte[] rawTtl) {
+    	int count = 0;
+        if (rawTtl != null && rawTtl.length == TTL_SIZE) {
+            StringBuffer sb = new StringBuffer();
+            for (byte octet : rawTtl) {
+                sb.append(String.format("%02X", octet));
+                if(count == 2) return String.format("%02X", octet);
+                	count++;
+            }
+            return sb.substring(1);
+        }
+        return null;
+    }
+// NIaaS SMS END
+    
     public static byte[] stringMacToRawMac(String address) {
         String[] elements = address.split(":");
         if (elements.length != MAC_ADDRESS_SIZE) {

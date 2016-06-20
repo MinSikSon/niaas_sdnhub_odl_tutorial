@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 SDN Hub
+C * Copyright (C) 2015 SDN Hub
 
  Licensed under the GNU GENERAL PUBLIC LICENSE, Version 3.
  You may not use this file except in compliance with this License.
@@ -15,60 +15,57 @@
  *
  */
 
+/* CLOUD_SERVER 와 FOG_SERVER 간의 경로 변경 과정 */
+/*
+ * [c.f.] macTable에는 srcMac과 ingressNodeConnectorId가 매핑 되어 있다.
+ * [1] srcIp와 srcMac를 매핑한 후 ipMacTable에 저장.
+ * [2] IF) PACKET 들어온 해당 ovs가 FOG_SERVER가 동작할 위치인지 확인. 즉, ovsId == runningFogOvsId 인지 확인.
+ * [3]   IF) docker img가 FOG_SERVER 상에 배포되어 docker container가 동작 중인지 확인.
+ * [4-1]   IF) PACKET's dstIp == CLOUD_SERVER's address [10.0.0.100] 인지 확인.
+ * [5-1]     PACKET의 dstIp (CLOUD_SERVER [10.0.0.100]) 및 dstMac을 FOG_SERVER's address [10.0.0.10]으로 바꿔주는 
+ *           FLOW_RULE을 해당 ovsId를 갖는 ovs에 내려준다. outputPort도 바꿔준다.
+ *         FI)
+ * [4-2]   IF) PACKET's srcIp == FOG_SERVER's address [10.0.0.10] 인지 확인.
+ * [5-2]     PACKET의 srcIp (FOG_SERVER [10.0.0.10]) 및 srcMac을 CLOUD_SERVER's address [10.0.0.100]으로 바꿔주는
+ *           FLOW_RULE을 해당 ovsId를 갖는 ovs에 내려준다. (outputPort는 바꾸지 않아도 될 것 같다.)
+ *         FI)
+ *       FI)
+ *     FI)
+ */
+
 package org.sdnhub.odl.tutorial.learningswitch.impl;
 
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.TableKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.InstructionsBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.MatchBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.ApplyActionsCaseBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.instruction.apply.actions._case.ApplyActionsBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.Instruction;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instruction.list.InstructionKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.TransmitPacketInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.TransmitPacketInputBuilder;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.sdnhub.odl.tutorial.utils.GenericTransactionUtils;
 import org.sdnhub.odl.tutorial.utils.PacketParsingUtils;
 import org.sdnhub.odl.tutorial.utils.inventory.InventoryUtils;
-import org.sdnhub.odl.tutorial.utils.openflow13.MatchUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,20 +74,25 @@ import com.google.common.collect.Lists;
 
 public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingListener {
 	private final Logger LOG = LoggerFactory.getLogger(this.getClass());
-	private int LOG_TITLE = 1; // SMS
-	private int LOG_TEST = 1; // SMS
-	private int LOG_MULTI = 1; // SMS
+// SMS NIaaS: [*] variables
+	// SMS: ip-mac matching table
+	private Map<String, String> ipMacTable = new HashMap<String, String>();
+	
+	// Commented by SMS: private String function = "hub";
+	private String function = "learningSwitch";
+	
+	private static String srcIp;
+	private static String dstIp;
+	private static String CLOUD_SERVER = "10.0.0.100";
+	private static String FOG_SERVER;
+// SMS NIaaS END	
+	
 	private final static long FLOOD_PORT_NUMBER = 0xfffffffbL;
 	
 	//Members specific to this class
-	private Map<String, NodeConnectorId> macTable = new HashMap<String, NodeConnectorId>();
+//	private Map<String, NodeConnectorId> macTable = new HashMap<String, NodeConnectorId>();
+	private Map<String, NodeConnectorId>[] macTable = new HashMap[20];	
 	
-	//SMS: ip-mac matching table
-	private Map<String, String> IpMacTable = new HashMap<String, String>();
-	
-//	private String function = "hub";
-	private String function = "learningSwitch";
-        
 	//Members related to MD-SAL operations
 	private List<Registration> registrations;
 	private DataBroker dataBroker;
@@ -98,10 +100,6 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 	
 	private static String srcMac;
 	private static String dstMac;
-	
-	// Manual input, cloud&fog ip
-	private static String cloudIp = "10.0.0.20";
-	private static String fogIp = "10.0.0.10";
 	
     public TutorialL2Forwarding(DataBroker dataBroker, NotificationProviderService notificationService, RpcProviderRegistry rpcProviderRegistry) {
     	//Store the data broker for reading/writing from inventory store
@@ -126,7 +124,8 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 	}
     
 	@Override
-	public void onPacketReceived(PacketReceived notification) {
+	public void onPacketReceived(PacketReceived notification) {		
+			
     	LOG.trace("Received packet notification {}", notification.getMatch());
     	
 		NodeConnectorRef ingressNodeConnectorRef = notification.getIngress();
@@ -136,10 +135,45 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 		// Useful to create it beforehand
 		NodeConnectorId floodNodeConnectorId = InventoryUtils.getNodeConnectorId(ingressNodeId, FLOOD_PORT_NUMBER);
 		NodeConnectorRef floodNodeConnectorRef = InventoryUtils.getNodeConnectorRef(floodNodeConnectorId);
-		if(LOG_TITLE == 1) LOG.debug("");
-		if(LOG_TITLE == 1) LOG.debug("==============onPacketReceived();==============");
-		if(LOG_TEST == 1) LOG.debug("[notification.getPayload()] {}", notification.getPayload());
-		if(LOG_MULTI == 1) LOG.debug("[LOG_MULTI]ingressNodeConnectorRef {}", ingressNodeConnectorRef);
+
+// SMS NIaaS: Variables
+		// macTable
+		Set<Entry<String, NodeConnectorId>> set;
+		Iterator<Entry<String,NodeConnectorId>> it;
+		// ipMac
+		Set<Entry<String, String>> set2;
+		Iterator<Entry<String,String>> it2;
+		// [2]
+		String switchNodeId = SMS_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
+		int switchNodeId_number = SMS_InventoryUtils.getSwitchNodeId_number(ingressNodeConnectorId);
+		String switchOutputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
+		String ovsId = "";
+		ArrayList<String> fogServer_OvsId_List = new ArrayList<String>(); // FOG_SERVER_OVS_ID.txt 값들 저장할 List
+		SMS_Docker.addFogServerOvsIdToList(fogServer_OvsId_List);
+		int fogServerOvsIdList_count = 0;
+		// [2], [3]
+		int FOG_SERVER_OVS_ID_ON = 0;
+		int DOCKER_SWITCH_IP_ON = 0;
+		// [3]
+		NodeConnectorId fogNodeConnectorId = null;
+		String fogNodeId = "";
+		String fogOutputPort = "";
+		ArrayList<String> fogServer_Ip_List = new ArrayList<String>();
+		SMS_Docker.addFogServerIpToList(fogServer_Ip_List);
+		int fogServerDockerList_count = 0;
+		String fogServerIp = "";
+		String fogServerMac = "";
+		String stringEtherTypeHex = "";
+// SMS NIaaS END
+		
+// SMS NIaaS: INIT
+		// macTable init
+		if(macTable[switchNodeId_number] == null){
+			macTable[switchNodeId_number] = new HashMap<String, NodeConnectorId>();
+		}
+		
+// SMS END
+		
         /*
          * Logic:
          * 0. Ignore LLDP packets
@@ -157,143 +191,241 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
     	//Ignore LLDP packets, or you will be in big trouble
 		byte[] etherTypeRaw = PacketParsingUtils.extractEtherType(notification.getPayload());
 		int etherType = (0x0000ffff & ByteBuffer.wrap(etherTypeRaw).getShort());
-		if(LOG_TITLE == 1) LOG.debug("(0) Ignore LLDP packets, etherType({})",etherType);
 		if (etherType == 0x88cc) {
 			return;
 		}
 		
+//// SMS NIaaS
+//		BufferedReader reader = null;
+//		String strReader = "";
+//		try {
+//			FileReader fr = new FileReader("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/table_clear.txt");
+//			if (fr != null) {
+//				reader = new BufferedReader(fr);
+//				strReader = reader.readLine();
+//				if (strReader.equals("clear")) {
+//					macTable.clear();
+//					ipMacTable.clear();
+//					reader.close();
+//					return;
+//				}
+//				reader.close();
+//			}
+//		} catch (FileNotFoundException e4) {
+//			// TODO Auto-generated catch block
+//			e4.printStackTrace();
+//		} catch (IOException e4) {
+//			// TODO Auto-generated catch block
+//			e4.printStackTrace();
+//		}
+//// SMS NIaaS END
+		
 		// Hub implementation
-		if(LOG_TITLE == 1) LOG.debug("If behaving as (1)\"hub\", perform a PACKET_OUT with FLOOD action");
-		if(LOG_TITLE == 1) LOG.debug("Else if behaving as (2)\"learning switch\"");
 		if (function.equals("hub")) {
-        	
 			//flood packet (1)
-			if(LOG_TITLE == 1) LOG.debug("(1) flood packet");
 			packetOut(ingressNodeRef, floodNodeConnectorRef, notification.getPayload());
 		} else {
-        	//TODO: Extract payload
+        	// TODO: Extract payload
 			byte[] payload = notification.getPayload();
 			
-        	//TODO: Extract MAC address (2.1)
-			if(LOG_TITLE == 1) LOG.debug("(2.1) Extract MAC addresses");
+        	// TODO: Extract MAC address (2.1)
 			byte[] dstMacRaw = PacketParsingUtils.extractDstMac(payload);
 			byte[] srcMacRaw = PacketParsingUtils.extractSrcMac(payload);
+			
 			srcMac = PacketParsingUtils.rawMacToString(srcMacRaw);
 			dstMac = PacketParsingUtils.rawMacToString(dstMacRaw);
-// >>>>>>>>>>>>>>>>>>> change the location.
-// LOCATION 1		
-			
-			//TODO: Learn source MAC address (2.2 - 1)
-			if(LOG_TITLE == 1) LOG.debug("(2.2) Learn source MAC address");
-			this.macTable.put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
-			if(LOG_TEST == 1) LOG.debug("macTable++++++++++++++++++++++++++++++++++++++++++++++++++++");
-			//SMS: display macTable
-			Set<Entry<String, NodeConnectorId>> set = macTable.entrySet();
-			Iterator<Entry<String,NodeConnectorId>> it = set.iterator();
-			while(it.hasNext()) {
-				Map.Entry<String, NodeConnectorId> e = (Map.Entry<String, NodeConnectorId>)it.next();
-				if(LOG_TEST == 1) LOG.debug("  | key: {} | value: {} |", e.getKey(), e.getValue());
-			}
-			if(LOG_TEST == 1) LOG.debug("macTable----------------------------------------------------");
-// >>>>>>>>>>>>>>>>>>> change the location.
-// LOCATION 2	
-/**********************************************************************			
- * SMS: Modify dst information +++++++++++++++++++++++++++++++
- **********************************************************************/
-			if(LOG_TITLE == 1) LOG.debug("+++++++++++++++++++++++++++++++* Modify dst information +++++++++++++++++++++++++++++++");
-			byte[] tmpSrcIp = new byte[4];
-			byte[] tmpDstIp = new byte[4];
-			String etherType_hex = SMS_Parser_Test.get_etherType(payload, etherTypeRaw);
-			SMS_Display.display_etherType(etherType_hex);
-			// SMS: display Address
-			if(LOG_TEST == 1) LOG.debug("[before] ...");
-			if(LOG_TEST == 1) LOG.debug("  | srcMac: {}", srcMac);
-			if(LOG_TEST == 1) LOG.debug("  | dstMac: {}", dstMac);
-			// SMS: get IpAddr (byte[])
-			tmpSrcIp = SMS_Display.display_srcIp(payload, etherType_hex); // & display Addr 
-			tmpDstIp = SMS_Display.display_dstIp(payload, etherType_hex); // & display Addr
-			// SMS: get IpAddr (string)			
-			String tmpSrcIp_string = SMS_Parser_Test.ip_byteArray_to_decimalString(tmpSrcIp);
-			String tmpDstIp_string = SMS_Parser_Test.ip_byteArray_to_decimalString(tmpDstIp);
-			
-			
-////////////////////////////// test ++
-//			if(tmpDstIp_string.equals("224.0.0.251")){
-//				
-//			}
-////////////////////////////// test --
-			
-			
-			
-			
-			if(LOG_TEST == 1) LOG.debug("IpMacTable++++++++++++++++++++++++++++++++++++++");
-			//SMS: Learn srcIp+srcMac address
-			this.IpMacTable.put(tmpSrcIp_string, srcMac);
-			//SMS: display IpMacTable
-			Set<Entry<String, String>> set2 = IpMacTable.entrySet();
-			Iterator<Entry<String,String>> it2 = set2.iterator();
-			while(it2.hasNext()) {
-				Map.Entry<String, String> e2 = (Map.Entry<String, String>)it2.next();
-				if(LOG_TEST == 1) LOG.debug("  | key: {} | value: {}  |", e2.getKey(), e2.getValue());
-			}
-			if(LOG_TEST == 1) LOG.debug("IpMacTable--------------------------------------");
-			
-// VV set cloud ip & fog ip
-			// SMS: change IpAddr, MacAddr in payload
-			String tmpSrcMac_string_cloud = this.IpMacTable.get(cloudIp); // 10.0.0.3
-			String tmpDstMac_string_fog = this.IpMacTable.get(fogIp); // 10.0.0.10
-			if(LOG_TEST == 1) LOG.debug("[tmpSrcMac_string_cloud] {}", tmpSrcMac_string_cloud);
-			if(LOG_TEST == 1) LOG.debug("[tmpDstMac_string_fog] {}", tmpDstMac_string_fog);
-			SMS_Change_Path.change_cloud_to_fog(payload, 
-					tmpSrcIp_string, tmpDstIp_string, cloudIp, fogIp,
-					tmpSrcMac_string_cloud, tmpDstMac_string_fog, 
-					etherType_hex);
-			// SMS: change srcMac, dstMac;
-			dstMacRaw = PacketParsingUtils.extractDstMac(payload);
-			srcMacRaw = PacketParsingUtils.extractSrcMac(payload);
-			srcMac = PacketParsingUtils.rawMacToString(srcMacRaw);
-			dstMac = PacketParsingUtils.rawMacToString(dstMacRaw);
-			// SMS: display changed Address
-			if(LOG_TEST == 1) LOG.debug("[after ] ...");
-			if(LOG_TEST == 1) LOG.debug("  | srcMac: {}", srcMac);
-			if(LOG_TEST == 1) LOG.debug("  | dstMac: {}", dstMac);
-			tmpSrcIp = SMS_Display.display_srcIp(payload, etherType_hex); // & display Addr
-			tmpDstIp = SMS_Display.display_dstIp(payload, etherType_hex); // & display Addr
-			if(LOG_TITLE == 1) LOG.debug("-------------------------------* Modify dst information -------------------------------");
-/**********************************************************************			
- * SMS: Modify dst information -------------------------------
- **********************************************************************/
 
-//			//SMS: Learn source MAC address (2.2 - 2)
-//			if(LOG_TITLE == 1) LOG.debug("[SMS+TITLE] (2.2) Learn source MAC address");
+// SMS NIaaS: init
+			//SMS: Extract IP address
+			srcIp = SMS_Parser_IpAddr.ipAddr_byteArray_to_stringIp(SMS_Parser_IpAddr.get_byteArray_SrcIp(payload));
+			dstIp = SMS_Parser_IpAddr.ipAddr_byteArray_to_stringIp(SMS_Parser_IpAddr.get_byteArray_DstIp(payload));
+			stringEtherTypeHex = SMS_Parser_MacAddr.get_stringEtherTypeHex(payload);
+// SMS NIaaS END
+			
+			
+			
+			
+// SMS NIaaS: display macTable
+			/* [c.f.] macTable에는 srcMac과 ingressNodeConnectorId가 매핑 되어 있다. */
+			// TODO: Learn source MAC address (2.2 - 1)
 //			this.macTable.put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
+			byte[] ttlRaw = PacketParsingUtils.extractIpHeaderTTL(payload);
+			String ttl = PacketParsingUtils.rawttlToString(ttlRaw);
 			
-			//TODO: Lookup destination MAC address in table (2.3)
-			if(LOG_TITLE == 1) LOG.debug("(2.3) Lookup in MAC table for the target node connector of dst_mac");
-//			NodeConnectorId egressNodeConnectorId = null;
-			NodeConnectorId egressNodeConnectorId = macTable.get(dstMac); // SMS
+			if(stringEtherTypeHex.equals("0800") && ttl.equals("40")){
+				LOG.debug("[TEST] ttl: {}", ttl);	
+				this.macTable[switchNodeId_number].put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
+				
+	//			LOG.debug("macTable++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	//			set = macTable.entrySet();
+				set = macTable[switchNodeId_number].entrySet();
+				it = set.iterator();
+				Map.Entry<String, NodeConnectorId> e;
+				BufferedWriter macTableOut = null;
+				String macTableName = "mactable_"+switchNodeId_number+".log";
+				try {
+	//				macTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/mactable.log));
+					macTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/"+macTableName));
+				} catch (IOException e3) {
+					// TODO Auto-generated catch block
+					e3.printStackTrace();
+				}
+				while(it.hasNext()) {
+					try {
+						e = (Map.Entry<String, NodeConnectorId>)it.next();
+						String txt = "|key: " + e.getKey() + "\t|value: " + e.getValue();
+						macTableOut.write(txt);
+						macTableOut.newLine();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+	//				LOG.debug("  | key: {} | value: {} |", e.getKey(), e.getValue());
+				}
+				try {
+					macTableOut.close();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+	//			LOG.debug("macTable----------------------------------------------------");
+				
+	// SMS NIaaS END
+			}
 			
-			//TODO: If found (2.3.1)
-			if(LOG_TITLE == 1) LOG.debug("(2.3.1) If found");
+			
+/* [1] srcIp와 srcMac를 매핑한 후 ipMacTable에 저장. */
+// SMS NIaaS: display ipMacTable
+			this.ipMacTable.put(srcIp, srcMac);
+//			LOG.debug("IpMacTable++++++++++++++++++++++++++++++++++++++++++++++++++");
+			set2 = ipMacTable.entrySet();
+			it2 = set2.iterator();
+			Map.Entry<String, String> e2;
+			BufferedWriter ipMacTableOut = null;
+			try {
+				ipMacTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/ipmactable.log"));
+			} catch (IOException e3) {
+				// TODO Auto-generated catch block
+				e3.printStackTrace();
+			}
+			while(it2.hasNext()) {
+				try {
+					e2 = (Map.Entry<String, String>)it2.next();
+					String txt = "|key: " + e2.getKey() + "    \t|value: " + e2.getValue();
+					ipMacTableOut.write(txt);
+					ipMacTableOut.newLine();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+//				LOG.debug("  | key: {} | value: {}  |", e2.getKey(), e2.getValue());
+			}
+			try {
+				ipMacTableOut.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+//			LOG.debug("IpMacTable--------------------------------------------------");
+// SMS NIaaS END
+			
+			// SMS: Learn source MAC address (2.2 - 2)
+			// TODO: Lookup destination MAC address in table (2.3)
+//			NodeConnectorId egressNodeConnectorId = macTable.get(dstMac);
+			NodeConnectorId egressNodeConnectorId = macTable[switchNodeId_number].get(dstMac);
+			
+			
+			// TODO: If found (2.3.1)
 			if(egressNodeConnectorId != null){
-				//TODO: 2.3.1.1 perform FLOW_MOD for that dst_mac through the target node connector
-				if(LOG_TITLE == 1) LOG.debug("(2.3.1.1) perform FLOW_MOD for that dst_mac through the target node connector");
-//				if(LOG_ON == 1) LOG.debug("[SMS] ingressNodeConnectorRef {}",ingressNodeConnectorRef);
-//				if(LOG_ON == 1) LOG.debug("[SMS] egressNodeConnectorRef {}",egressNodeConnectorRef);
+				// TODO: 2.3.1.1 perform FLOW_MOD for that dst_mac through the target node connector				
+/* [2] IF) PACKET 들어온 해당 ovs가 FOG_SERVER가 동작할 위치인지 확인. 즉, ovsId == runningFogOvsId 인지 확인. (e.g. openflow:1:5) */
+				if(fogServer_OvsId_List.isEmpty()){
+					FOG_SERVER_OVS_ID_ON = 0;
+				}else{
+//					LOG.debug("<1111111111  fogServerOvsIdList");
+//					for(fogServerOvsIdList_count = 0 ; fogServerOvsIdList_count < fogServer_OvsId_List.size() ; fogServerOvsIdList_count++){
+					for(String tmp: fogServer_OvsId_List){
+//						ovsId = fogServer_OvsId_List.get(fogServerOvsIdList_count);
+						ovsId = tmp;
+						if(!(ovsId == null)){
+							if(switchNodeId.equals(ovsId)){ // openflow:?
+								FOG_SERVER_OVS_ID_ON = 1;
+								break;
+							}
+						}
+//						LOG.debug("fogServerOvsIdList({}) {}", fogServerOvsIdList_count, fogServerOvsIdList.get(fogServerOvsIdList_count));
+					}
+//					LOG.debug("1111111111>");
+				}
 				
-//				programL2Flow(ingressNodeId, dstMac, ingressNodeConnectorId, egressNodeConnectorId);
+/* [3]   IF) docker img가 FOG_SERVER 상에 배포되어 docker container가 동작 중인지 확인. (e.g. 10.0.0.10) */
+				if(fogServer_Ip_List.isEmpty()){
+					DOCKER_SWITCH_IP_ON = 0;
+				}else{
+//					LOG.debug("<2222222222  fogServerDockerList");
+//					for(fogServerDockerList_count = 0 ; fogServerDockerList_count < fogServer_Ip_List.size() ; fogServerDockerList_count++){
+					for(String tmp: fogServer_Ip_List){
+//						fogServerIp = fogServer_Ip_List.get(fogServerDockerList_count);
+						fogServerIp = tmp;
+						fogServerMac = ipMacTable.get(fogServerIp);
+//						LOG.debug("fogServerDockerListValue {} | ipMacTableValue {}", fogServerDockerListValue, ipMacTableValue);
+						if(!(fogServerMac == null)){
+							// extract NodeId, OutputPort
+//							fogNodeConnectorId = macTable.get(fogServerMac);
+							fogNodeConnectorId = macTable[switchNodeId_number].get(fogServerMac);
+							if(!(fogNodeConnectorId == null)){
+								fogNodeId = SMS_InventoryUtils.getSwitchNodeId(fogNodeConnectorId);
+								fogOutputPort = SMS_InventoryUtils.getOutputPort(fogNodeConnectorId);
+								if(switchNodeId.equals(fogNodeId)) {
+	//								LOG.debug("fogNodeId {} | fogOutputPort {}", fogNodeId, fogOutputPort);
+									DOCKER_SWITCH_IP_ON = 1;
+									break;
+								}
+							}
+						}
+//						LOG.debug("fogServerDockerList({}) {}", fogServerDockerList_count, fogServerDockerList.get(fogServerDockerList_count));
+					}
+//					LOG.debug("2222222222>");
+				}
+
+// FOG_SERVER_OVS_ID_CHECK과 DOCKER_SWITCH_CHECK 둘다 1일 경우, 임시로 수동으로 openflow:1과 10.0.0.10을 매핑.
+// 나중에는 자동으로 인지하고 매핑하도록 해야함.
+// SMS NiaaS: set up "FLOW_RULE" to ovs
 				
+				FOG_SERVER = "";
+				if(stringEtherTypeHex.equals("0800")){
+					LOG.debug("=====================================================================================");
+					LOG.debug("FOG_SERVER_OVS_ID_CHECK( {})  |  DOCKER_SWITCH_IP_ON( {})", FOG_SERVER_OVS_ID_ON, DOCKER_SWITCH_IP_ON);
+					LOG.debug("switchNodeId( {})  |  switchOutputPort( {})  |  ovsId( {})  |  fogServerIp( {})", switchNodeId, switchOutputPort, ovsId, fogServerIp);
+					LOG.debug("-------------------------------------------------------------------------------------");
+					if(FOG_SERVER_OVS_ID_ON == 1 && DOCKER_SWITCH_IP_ON == 1){
+						FOG_SERVER = fogServerIp; // V
+						TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_O(payload, ingressNodeId, 
+								srcIp, dstIp, srcMac, dstMac, 
+								ingressNodeConnectorId, egressNodeConnectorId,
+//								ipMacTable, macTable,
+								ipMacTable, macTable[switchNodeId_number],
+								dataBroker,
+								CLOUD_SERVER, FOG_SERVER, fogNodeId, fogOutputPort);
+					}
+					// 테스트 위해 주석처리
+					else {
+						TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_X(payload, ingressNodeId, 
+								srcIp, dstIp, srcMac, dstMac, 
+								ingressNodeConnectorId, egressNodeConnectorId,
+								ipMacTable, macTable[switchNodeId_number],
+								dataBroker);
+					}
+				}
+// SMS NiaaS End
+		
 				NodeConnectorRef egressNodeConnectorRef = InventoryUtils.getNodeConnectorRef(egressNodeConnectorId);
-//				NodeId egressNodeId = InventoryUtils.getNodeId(egressNodeConnectorRef);
 				NodeRef egressNodeRef = InventoryUtils.getNodeRef(egressNodeConnectorRef);
 				
-				//TODO: 2.3.1.2 perform PACKET_OUT of this packet to target node connector
-				if(LOG_TITLE == 1) LOG.debug("(2.3.1.2) perform PACKET_OUT of this packet to target node connector");
+				// TODO: 2.3.1.2 perform PACKET_OUT of this packet to target node connector
 				packetOut(egressNodeRef, egressNodeConnectorRef, payload);
 			}else{
-            	//2.3.2 Flood packet
-				if(LOG_TITLE == 1) LOG.debug("(2.3.2) Flood packet");
-//				packetOut(ingressNodeRef, floodNodeConnectorRef, payload);
+            	// 2.3.2 Flood packet
 				packetOut(ingressNodeRef, floodNodeConnectorRef, payload);
 			}
 		}
@@ -301,113 +433,15 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 
 	private void packetOut(NodeRef egressNodeRef, NodeConnectorRef egressNodeConnectorRef, byte[] payload) {
 		Preconditions.checkNotNull(packetProcessingService);
-//		LOG.debug("Flooding packet of size {} out of port {}", payload.length, egressNodeConnectorRef);
-		if(LOG_MULTI == 1) LOG.debug("[LOG_MULTI]egressNodeRef {}", egressNodeRef);
 		//Construct input for RPC call to packet processing service
 		TransmitPacketInput input = new TransmitPacketInputBuilder()
 				.setPayload(payload)
 				.setNode(egressNodeRef)
 				.setEgress(egressNodeConnectorRef)
 				.build();
-//		LOG.debug("[input  ] {}", input);
 		packetProcessingService.transmitPacket(input);
-//		LOG.debug("[packetProcessingService] {}",packetProcessingService);
 	}    
-	
-	
-	
-	private void programL2Flow(NodeId nodeId, String dstMac, NodeConnectorId ingressNodeConnectorId, NodeConnectorId egressNodeConnectorId) {
-
-    	/* Programming a flow involves:
-    	 * 1. Creating a Flow object that has a match and a list of instructions,
-    	 * 2. Adding Flow object as an augmentation to the Node object in the inventory. 
-    	 * 3. FlowProgrammer module of OpenFlowPlugin will pick up this data change and eventually program the switch.
-    	 */
-		if(LOG_TITLE == 1) LOG.debug("==============programL2Flow();==============");
-		// Creating match object
-		MatchBuilder matchBuilder = new MatchBuilder();
-		MatchUtils.createEthDstMatch(matchBuilder, new MacAddress(dstMac), null);
-		MatchUtils.createInPortMatch(matchBuilder, ingressNodeConnectorId);
-		
-		// Instructions List Stores Individual Instructions
-		InstructionBuilder ib = new InstructionBuilder();
-		List<Instruction> instructions = Lists.newArrayList();
-		InstructionsBuilder isb = new InstructionsBuilder();
-		
-		ActionBuilder ab = new ActionBuilder();
-		List<Action> actionList = Lists.newArrayList();
-		ApplyActionsBuilder aab = new ApplyActionsBuilder();
-
-		if(LOG_TITLE == 1) LOG.debug("Set output action++++++++++++++++++++++++++++++++++++++++++");
-		// Set output action
-		OutputActionBuilder output = new OutputActionBuilder();
-		output.setOutputNodeConnector(egressNodeConnectorId);
-		output.setMaxLength(65535); // Send full packet and No buffer
-//		DropActionCase dropAction = new DropActionCaseBuilder().build();
-		ab.setAction(new OutputActionCaseBuilder().setOutputAction(output.build()).build());
-//		ab.setAction(dropAction);
-		ab.setOrder(0);
-		ab.setKey(new ActionKey(0));
-		actionList.add(ab.build());
-		
-		// SMS: test+++++++++++++++++++++++++++++++++++++++++++
-		ActionBuilder ab2 = new ActionBuilder();
-		OutputActionBuilder output2 = new OutputActionBuilder();
-		output2.setOutputNodeConnector(ingressNodeConnectorId);
-		output2.setMaxLength(65535); // Send full packet and No buffer
-//		DropActionCase dropAction = new DropActionCaseBuilder().build();
-		ab2.setAction(new OutputActionCaseBuilder().setOutputAction(output2.build()).build());
-//		ab2.setAction(dropAction);
-		ab2.setOrder(1);
-		ab2.setKey(new ActionKey(1));
-		actionList.add(ab2.build());
-		// SMS: test-------------------------------------------
-		
-		if(LOG_TITLE == 1) LOG.debug("actionList+++++++++++++++++++++++++++++++++++++++++++++++++++++");
-		for(int i = 0 ; i < actionList.size() ; i++){
-			if(LOG_TEST == 1) LOG.debug("  | index: {} | value: {} |", i, actionList.get(i));
-		}
-		if(LOG_TITLE == 1) LOG.debug("actionList-----------------------------------------------------");
-		if(LOG_TITLE == 1) LOG.debug("Set output action------------------------------------------");
-		// Create Apply Actions Instruction
-		aab.setAction(actionList);
-		ib.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(aab.build()).build());
-		ib.setOrder(0);
-		ib.setKey(new InstructionKey(0));
-		instructions.add(ib.build());
-
-		if(LOG_TITLE == 1) LOG.debug("++++++++++Create Flow++++++++++");
-		// Create Flow
-		FlowBuilder flowBuilder = new FlowBuilder();
-		flowBuilder.setMatch(matchBuilder.build());
-
-		String flowId = "L2_Rule_" + dstMac;
-		flowBuilder.setId(new FlowId(flowId));
-		FlowKey key = new FlowKey(new FlowId(flowId));
-		flowBuilder.setBarrier(true);
-		flowBuilder.setTableId((short) 0);
-		flowBuilder.setKey(key);
-//		flowBuilder.setPriority(32768);
-		flowBuilder.setPriority(500);
-		flowBuilder.setFlowName(flowId);
-		flowBuilder.setHardTimeout(0);
-		flowBuilder.setIdleTimeout(0);
-		flowBuilder.setInstructions(isb.setInstruction(instructions).build());
-        
-		LOG.debug("flowBuilder++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-		LOG.debug("flowBuilder.getInstructions(): {}", flowBuilder.getInstructions());
-		LOG.debug("flowBuilder.getInstructions().getInstruction(): {}", flowBuilder.getInstructions());
-		LOG.debug("flowBuilder------------------------------------------------------");
-        
-		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
-				.child(Node.class, new NodeKey(nodeId))
-				.augmentation(FlowCapableNode.class)
-				.child(Table.class, new TableKey(flowBuilder.getTableId()))
-				.child(Flow.class, flowBuilder.getKey())
-				.build();
-		GenericTransactionUtils.writeData(dataBroker, LogicalDatastoreType.CONFIGURATION, flowIID, flowBuilder.build(), true);
-		if(LOG_TITLE == 1) LOG.debug("----------Create Flow----------");
-    }
 }
+
 
 

@@ -5,30 +5,50 @@ import org.slf4j.LoggerFactory;
 
 public abstract class SMS_Parser {
 	
+	/**
+     * @param intValue
+     * @return byteValue
+     */
 	public static byte int_to_byte(int intValue){
 		final Logger LOG = LoggerFactory.getLogger(SMS_Parser.class);
 		if(-128 <= intValue && intValue <= 255) {
-			return (byte)intValue;
+			byte byteValue = (byte)intValue;
+			return byteValue;
 		}else {
 			LOG.debug("(Error) int_to_byte  (intValue: {})", intValue);
 			return 0; // error
 		}
 	}
+	
+	/**
+     * @param byteValue
+     * @return intValue
+     */
 	public static int byte_to_int(byte byteValue){
 		int intValue = byteValue & 0xff;
 		return intValue;
 	}
-	public static byte[] hex_to_ByteArray(String hex) {
-		if (hex == null || hex.length() == 0){
+	
+	/**
+     * @param stringHex
+     * @return byteArray
+     */
+	public static byte[] stringHex_to_byteArray(String stringHex) {
+		if (stringHex == null || stringHex.length() == 0){
 			return null;
 		}
-		byte[] ba = new byte[hex.length() / 2];
-		for (int i = 0 ; i < ba.length; i++) {
-			ba[i] = (byte) Integer.parseInt(hex.substring(2*i, 2*i + 2), 16);
+		byte[] byteArray = new byte[stringHex.length() / 2];
+		for (int i = 0 ; i < byteArray.length; i++) {
+			byteArray[i] = (byte) Integer.parseInt(stringHex.substring(2*i, 2*i + 2), 16);
 		}
-		return ba;
+		return byteArray;
 	}
-	public static String byteArray_to_Hex(byte[] ba) {
+	
+	/**
+     * @param byteArray
+     * @return stringHex
+     */
+	public static String byteArray_to_stringHex(byte[] ba) {
 		if (ba == null || ba.length == 0){
 			return null;
 		}
@@ -40,6 +60,4 @@ public abstract class SMS_Parser {
 		}
 		return sb.toString();
 	}
-	
-	
 }

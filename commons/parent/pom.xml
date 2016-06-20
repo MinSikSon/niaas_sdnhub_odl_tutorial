@@ -9,7 +9,7 @@
     <groupId>org.opendaylight.odlparent</groupId>
     <artifactId>odlparent</artifactId>
     <version>1.5.0-SNAPSHOT</version>
-    <relativePath></relativePath>
+    <relativePath></relativePath> 
   </parent>
 
   <groupId>org.sdnhub.odl.tutorial</groupId>
@@ -32,20 +32,20 @@
     <!-- SDN Hub artifact versions -->
     <learning-switch.version>1.0.0-SNAPSHOT</learning-switch.version>
     <feature.learning-switch.version>1.0.0-SNAPSHOT</feature.learning-switch.version>
-    <tapapp.version>1.0.0-SNAPSHOT</tapapp.version>
-    <feature.tapapp.version>1.0.0-SNAPSHOT</feature.tapapp.version>
-    <acl.version>1.0.0-SNAPSHOT</acl.version>
-    <feature.acl.version>1.0.0-SNAPSHOT</feature.acl.version>
+    <tapapp.version>1.0.0-SNAPSHOT</tapapp.version> 
+    <feature.tapapp.version>1.0.0-SNAPSHOT</feature.tapapp.version> 
+    <acl.version>1.0.0-SNAPSHOT</acl.version> 
+    <feature.acl.version>1.0.0-SNAPSHOT</feature.acl.version> 
     <utils.version>1.0.0-SNAPSHOT</utils.version>
     <feature.odl.tutorial.version>1.0.0-SNAPSHOT</feature.odl.tutorial.version>
     <karaf.branding.version>1.0.0-SNAPSHOT</karaf.branding.version>
-    <netconf-exercise.version>1.0.0-SNAPSHOT</netconf-exercise.version>
+    <netconf-exercise.version>1.0.0-SNAPSHOT</netconf-exercise.version> 
 
     <!-- Project config files -->
     <learning-switch.configfile>49-learning-switch-config.xml</learning-switch.configfile>
-    <tapapp.configfile>50-tapapp-config.xml</tapapp.configfile>
-    <acl.configfile>51-acl-config.xml</acl.configfile>
-    <netconf-exercise.configfile>51-netconf-exercise-config.xml</netconf-exercise.configfile>
+    <tapapp.configfile>50-tapapp-config.xml</tapapp.configfile> 
+    <acl.configfile>51-acl-config.xml</acl.configfile> 
+    <netconf-exercise.configfile>51-netconf-exercise-config.xml</netconf-exercise.configfile> 
 
     <!-- ODL Controller Dependency Versions -->
     <mdsal.version>1.2.0-Lithium</mdsal.version>
@@ -59,6 +59,8 @@
 
     <!-- Southbound plugin versions -->
     <openflowplugin.version>0.1.0-Lithium</openflowplugin.version>
+    <feature-openflowplugin.version>0.1.0-Lithium</feature-openflowplugin.version>
+<!--    <openflowplugin-extension-api.version>0.1.0-Lithium</openflowplugin-extension-api.version>	-->
 
     <!-- Karaf and maven dependencies -->
     <opendaylight-karaf-empty.version>1.6.0-Lithium</opendaylight-karaf-empty.version>
@@ -69,12 +71,16 @@
     <!-- Karaf feature version -->
     <feature.base.version>1.5.0-Lithium</feature.base.version>
     <feature.empty.version>1.5.0-Lithium</feature.empty.version>
-    <feature.l2switch.version>0.2.0-Lithium</feature.l2switch.version>
+    <feature.l2switch.version>0.2.0-Lithium</feature.l2switch.version> 
+<!--    <feature.l2switch.version>0.2.1-Lithium-SR1</feature.l2switch.version>  -->
     <feature.dlux.version>0.2.0-Lithium</feature.dlux.version>
     <feature.netconf.connector.version>1.2.0-Lithium</feature.netconf.connector.version>
     <feature.restconf.version>1.2.0-Lithium</feature.restconf.version>
     <feature.mdsal.version>1.2.0-Lithium</feature.mdsal.version>
     <feature.openflowplugin.version>0.1.0-Lithium</feature.openflowplugin.version>
+<!--    <feature.openflowplugin-extension-api.version>0.1.0-Lithium</feature.openflowplugin-extension-api.version>	-->
+
+<!-- SMS: Extension -->
 
   </properties>
 
