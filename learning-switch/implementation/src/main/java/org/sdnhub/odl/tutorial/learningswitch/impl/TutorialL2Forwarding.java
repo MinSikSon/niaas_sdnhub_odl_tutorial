@@ -85,6 +85,8 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 	private static String dstIp;
 	private static String CLOUD_SERVER = "10.0.0.100";
 	private static String FOG_SERVER;
+	
+	private static int SMS_COUNT_COUNT = 1;
 // SMS NIaaS END	
 	
 	private final static long FLOOD_PORT_NUMBER = 0xfffffffbL;
@@ -170,8 +172,8 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 		// macTable init
 		if(macTable[switchNodeId_number] == null){
 			macTable[switchNodeId_number] = new HashMap<String, NodeConnectorId>();
+			LOG.debug("[macTable init] switchNodeId_number: {}", switchNodeId_number);
 		}
-		
 // SMS END
 		
         /*
@@ -253,8 +255,12 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			String ttl = PacketParsingUtils.rawttlToString(ttlRaw);
 			
 			if(stringEtherTypeHex.equals("0800") && ttl.equals("40")){
-//				LOG.debug("[TEST] ttl: {}", ttl);	
+//			if(ttl.equals("40")){
+//			if(stringEtherTypeHex.equals("0800")){
+				LOG.debug("[TEST] ttl: {}  |  SMS_COUNT_COUNT: {}", ttl, SMS_COUNT_COUNT);	
+				SMS_COUNT_COUNT++;
 				this.macTable[switchNodeId_number].put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
+				LOG.debug("srcMac: {} | ingressNodeConnectorId: {}", srcMac, ingressNodeConnectorId);
 				
 	//			LOG.debug("macTable++++++++++++++++++++++++++++++++++++++++++++++++++++");
 	//			set = macTable.entrySet();
@@ -289,13 +295,14 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 					e1.printStackTrace();
 				}
 	//			LOG.debug("macTable----------------------------------------------------");
-				
+			}				
 	// SMS NIaaS END
-			}
+
 			
 			
 /* [1] srcIp와 srcMac를 매핑한 후 ipMacTable에 저장. */
 // SMS NIaaS: display ipMacTable
+//			if(!srcIp.equals("0.0.0.0")) this.ipMacTable.put(srcIp, srcMac);
 			this.ipMacTable.put(srcIp, srcMac);
 //			LOG.debug("IpMacTable++++++++++++++++++++++++++++++++++++++++++++++++++");
 			set2 = ipMacTable.entrySet();
@@ -393,30 +400,30 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 // SMS NiaaS: set up "FLOW_RULE" to ovs
 				
 				FOG_SERVER = "";
-				if(stringEtherTypeHex.equals("0800")){
-					LOG.debug("=====================================================================================");
-					LOG.debug("FOG_SERVER_OVS_ID_CHECK( {})  |  DOCKER_SWITCH_IP_ON( {})", FOG_SERVER_OVS_ID_ON, DOCKER_SWITCH_IP_ON);
-					LOG.debug("switchNodeId( {})  |  switchOutputPort( {})  |  ovsId( {})  |  fogServerIp( {})", switchNodeId, switchOutputPort, ovsId, fogServerIp);
-					LOG.debug("-------------------------------------------------------------------------------------");
-					if(FOG_SERVER_OVS_ID_ON == 1 && DOCKER_SWITCH_IP_ON == 1){
-						FOG_SERVER = fogServerIp; // V
-						TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_O(payload, ingressNodeId, 
-								srcIp, dstIp, srcMac, dstMac, 
-								ingressNodeConnectorId, egressNodeConnectorId,
-//								ipMacTable, macTable,
-								ipMacTable, macTable[switchNodeId_number],
-								dataBroker,
-								CLOUD_SERVER, FOG_SERVER, fogNodeId, fogOutputPort);
-					}
-					// 테스트 위해 주석처리
-					else {
+//				if(stringEtherTypeHex.equals("0800")){
+//					LOG.debug("=====================================================================================");
+//					LOG.debug("FOG_SERVER_OVS_ID_CHECK( {})  |  DOCKER_SWITCH_IP_ON( {})", FOG_SERVER_OVS_ID_ON, DOCKER_SWITCH_IP_ON);
+//					LOG.debug("switchNodeId( {})  |  switchOutputPort( {})  |  ovsId( {})  |  fogServerIp( {})", switchNodeId, switchOutputPort, ovsId, fogServerIp);
+//					LOG.debug("-------------------------------------------------------------------------------------");
+//					if(FOG_SERVER_OVS_ID_ON == 1 && DOCKER_SWITCH_IP_ON == 1){
+//						FOG_SERVER = fogServerIp; // V
+//						TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_O(payload, ingressNodeId, 
+//								srcIp, dstIp, srcMac, dstMac, 
+//								ingressNodeConnectorId, egressNodeConnectorId,
+////								ipMacTable, macTable,
+//								ipMacTable, macTable[switchNodeId_number],
+//								dataBroker,
+//								CLOUD_SERVER, FOG_SERVER, fogNodeId, fogOutputPort);
+//					}
+//					// 테스트 위해 주석처리
+//					else {
 						TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_X(payload, ingressNodeId, 
 								srcIp, dstIp, srcMac, dstMac, 
 								ingressNodeConnectorId, egressNodeConnectorId,
 								ipMacTable, macTable[switchNodeId_number],
 								dataBroker);
-					}
-				}
+//					}
+//				}
 // SMS NiaaS End
 		
 				NodeConnectorRef egressNodeConnectorRef = InventoryUtils.getNodeConnectorRef(egressNodeConnectorId);

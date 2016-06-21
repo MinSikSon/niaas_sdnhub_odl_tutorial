@@ -306,7 +306,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		int LOG_TITLE = 0;
 		int LOG_programL2Flow = 0;
 		
-		LOG.debug("programL2Flow_pathChange_X() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//		LOG.debug("programL2Flow_pathChange_X() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 /* [2] IF) PACKET 들어온 해당 ovs가 FOG_SERVER가 동작할 위치인지 확인. 즉, ovsId == runningFogOvsId 인지 확인. */
 		String switchNodeId = SMS_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
 		String switchOutputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
@@ -341,8 +341,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x33333333))));
 		
 		// * 에러) 패킷의 목적지의 nodeId와 현재의 nodeId가 다를 경우, outputPort를 지정할 때 에러가 생긴다.
-		if(switchNodeId.equals(SMS_InventoryUtils.getSwitchNodeId(egressNodeConnectorId))){
-			LOG.debug("createInsturctions_One()");
+//		if(switchNodeId.equals(SMS_InventoryUtils.getSwitchNodeId(egressNodeConnectorId))){
 			flowBuilder.setInstructions(SMS_FlowRule.createInsturctions_One(egressNodeConnectorId).build());
 			
 			InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
@@ -352,7 +351,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 					.child(Flow.class, flowBuilder.getKey())
 					.build();
 			GenericTransactionUtils.writeData(dataBroker, LogicalDatastoreType.CONFIGURATION, flowIID, flowBuilder.build(), true);
-		}
+//		}
 //		else{
 //			// 이 부분에, 아래의 return;을 주석처리 하고, flood 동작을 추가해야 한다.
 ////			return;
