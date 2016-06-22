@@ -87,6 +87,9 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 	private static String FOG_SERVER;
 	
 	private static int SMS_COUNT_COUNT = 1;
+	
+//	private BufferedWriter ipMacTableOut = null;
+//	private BufferedWriter macTableOut = null;
 // SMS NIaaS END	
 	
 	private final static long FLOOD_PORT_NUMBER = 0xfffffffbL;
@@ -148,7 +151,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 		// [2]
 		String switchNodeId = SMS_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
 		int switchNodeId_number = SMS_InventoryUtils.getSwitchNodeId_number(ingressNodeConnectorId);
-		String switchOutputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
+		String switchInputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
 		String ovsId = "";
 		ArrayList<String> fogServer_OvsId_List = new ArrayList<String>(); // FOG_SERVER_OVS_ID.txt 값들 저장할 List
 		SMS_Docker.addFogServerOvsIdToList(fogServer_OvsId_List);
@@ -196,6 +199,9 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 		if (etherType == 0x88cc) {
 			return;
 		}
+//		if (etherType == 0x86dd) { // ipv6
+//			return;
+//		}
 		
 //// SMS NIaaS
 //		BufferedReader reader = null;
@@ -247,20 +253,22 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			
 			
 			
-// SMS NIaaS: display macTable
+// SMS NIaaS: macTable
 			/* [c.f.] macTable에는 srcMac과 ingressNodeConnectorId가 매핑 되어 있다. */
 			// TODO: Learn source MAC address (2.2 - 1)
 //			this.macTable.put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
 			byte[] ttlRaw = PacketParsingUtils.extractIpHeaderTTL(payload);
 			String ttl = PacketParsingUtils.rawttlToString(ttlRaw);
 			
-			if(stringEtherTypeHex.equals("0800") && ttl.equals("40")){
+//			if(stringEtherTypeHex.equals("0800") && ttl.equals("40")){
 //			if(ttl.equals("40")){
-//			if(stringEtherTypeHex.equals("0800")){
-				LOG.debug("[TEST] ttl: {}  |  SMS_COUNT_COUNT: {}", ttl, SMS_COUNT_COUNT);	
+			if(stringEtherTypeHex.equals("0800") || stringEtherTypeHex.equals("0806")){ // ipv4와 ARP
+				LOG.debug("=====================================================================================");
+				LOG.debug("1>  srcMac: {}  | dstMac: {}  | ethType: {}  | ttl: {}  | SMS_COUNT_COUNT: {}", srcMac, dstMac, stringEtherTypeHex, ttl, SMS_COUNT_COUNT);	
 				SMS_COUNT_COUNT++;
 				this.macTable[switchNodeId_number].put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
-				LOG.debug("srcMac: {} | ingressNodeConnectorId: {}", srcMac, ingressNodeConnectorId);
+				LOG.debug("2>  ingressNodeConnectorId: {}",ingressNodeConnectorId);
+//				LOG.debug("(switchNodeId: {} | switchInputPort: {})", switchNodeId, switchInputPort);
 				
 	//			LOG.debug("macTable++++++++++++++++++++++++++++++++++++++++++++++++++++");
 	//			set = macTable.entrySet();
@@ -270,38 +278,27 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 				BufferedWriter macTableOut = null;
 				String macTableName = "mactable_"+switchNodeId_number+".log";
 				try {
-	//				macTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/mactable.log));
 					macTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/"+macTableName));
-				} catch (IOException e3) {
-					// TODO Auto-generated catch block
-					e3.printStackTrace();
-				}
-				while(it.hasNext()) {
-					try {
+					while(it.hasNext()) {							
 						e = (Map.Entry<String, NodeConnectorId>)it.next();
 						String txt = "|key: " + e.getKey() + "\t|value: " + e.getValue();
 						macTableOut.write(txt);
 						macTableOut.newLine();
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
+//						LOG.debug("  | key: {} | value: {} |", e.getKey(), e.getValue());
 					}
-	//				LOG.debug("  | key: {} | value: {} |", e.getKey(), e.getValue());
-				}
-				try {
 					macTableOut.close();
-				} catch (IOException e1) {
+				} catch (IOException e3) {
 					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					e3.printStackTrace();
 				}
 	//			LOG.debug("macTable----------------------------------------------------");
 			}				
-	// SMS NIaaS END
+// SMS NIaaS END
 
 			
 			
 /* [1] srcIp와 srcMac를 매핑한 후 ipMacTable에 저장. */
-// SMS NIaaS: display ipMacTable
+// SMS NIaaS: ipMacTable
 //			if(!srcIp.equals("0.0.0.0")) this.ipMacTable.put(srcIp, srcMac);
 			this.ipMacTable.put(srcIp, srcMac);
 //			LOG.debug("IpMacTable++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -311,27 +308,17 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			BufferedWriter ipMacTableOut = null;
 			try {
 				ipMacTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/ipmactable.log"));
-			} catch (IOException e3) {
-				// TODO Auto-generated catch block
-				e3.printStackTrace();
-			}
-			while(it2.hasNext()) {
-				try {
+				while(it2.hasNext()) {
 					e2 = (Map.Entry<String, String>)it2.next();
 					String txt = "|key: " + e2.getKey() + "    \t|value: " + e2.getValue();
 					ipMacTableOut.write(txt);
 					ipMacTableOut.newLine();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+//					LOG.debug("  | key: {} | value: {}  |", e2.getKey(), e2.getValue());
 				}
-//				LOG.debug("  | key: {} | value: {}  |", e2.getKey(), e2.getValue());
-			}
-			try {
 				ipMacTableOut.close();
-			} catch (IOException e1) {
+			} catch (IOException e3) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				e3.printStackTrace();
 			}
 //			LOG.debug("IpMacTable--------------------------------------------------");
 // SMS NIaaS END
@@ -341,9 +328,9 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 //			NodeConnectorId egressNodeConnectorId = macTable.get(dstMac);
 			NodeConnectorId egressNodeConnectorId = macTable[switchNodeId_number].get(dstMac);
 			
-			
 			// TODO: If found (2.3.1)
 			if(egressNodeConnectorId != null){
+				LOG.debug("3>  egressNodeConnectorId: {}", egressNodeConnectorId);
 				// TODO: 2.3.1.1 perform FLOW_MOD for that dst_mac through the target node connector				
 /* [2] IF) PACKET 들어온 해당 ovs가 FOG_SERVER가 동작할 위치인지 확인. 즉, ovsId == runningFogOvsId 인지 확인. (e.g. openflow:1:5) */
 				if(fogServer_OvsId_List.isEmpty()){
@@ -400,10 +387,11 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 // SMS NiaaS: set up "FLOW_RULE" to ovs
 				
 				FOG_SERVER = "";
-//				if(stringEtherTypeHex.equals("0800")){
+//				if(stringEtherTypeHex.equals("0800") && ttl.equals("40")){
+				if(stringEtherTypeHex.equals("0800") || stringEtherTypeHex.equals("0806")){ // ipv4와 ARP
 //					LOG.debug("=====================================================================================");
 //					LOG.debug("FOG_SERVER_OVS_ID_CHECK( {})  |  DOCKER_SWITCH_IP_ON( {})", FOG_SERVER_OVS_ID_ON, DOCKER_SWITCH_IP_ON);
-//					LOG.debug("switchNodeId( {})  |  switchOutputPort( {})  |  ovsId( {})  |  fogServerIp( {})", switchNodeId, switchOutputPort, ovsId, fogServerIp);
+//					LOG.debug("switchNodeId( {})  |  switchInputPort( {})  |  ovsId( {})  |  fogServerIp( {})", switchNodeId, switchInputPort, ovsId, fogServerIp);
 //					LOG.debug("-------------------------------------------------------------------------------------");
 //					if(FOG_SERVER_OVS_ID_ON == 1 && DOCKER_SWITCH_IP_ON == 1){
 //						FOG_SERVER = fogServerIp; // V
@@ -423,7 +411,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 								ipMacTable, macTable[switchNodeId_number],
 								dataBroker);
 //					}
-//				}
+				}
 // SMS NiaaS End
 		
 				NodeConnectorRef egressNodeConnectorRef = InventoryUtils.getNodeConnectorRef(egressNodeConnectorId);

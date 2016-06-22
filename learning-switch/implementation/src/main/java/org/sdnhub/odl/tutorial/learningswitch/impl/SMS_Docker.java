@@ -79,7 +79,16 @@ public class SMS_Docker {
 //		LOG.debug("addFogServerIpToList()++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 //		int exist = 0;
 		try {
-			Runtime.getRuntime().exec("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/GET_DOCKER_STATUS.sh DOCKER_SWITCH_IP.txt");
+			Process process = Runtime.getRuntime().exec("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/GET_DOCKER_STATUS.sh DOCKER_SWITCH_IP.txt");
+			process.getErrorStream().close();
+			process.getInputStream().close();
+			process.getOutputStream().close();
+			try {
+				process.waitFor();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

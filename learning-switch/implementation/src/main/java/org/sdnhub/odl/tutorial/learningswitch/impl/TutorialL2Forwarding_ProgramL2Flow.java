@@ -306,11 +306,11 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		int LOG_TITLE = 0;
 		int LOG_programL2Flow = 0;
 		
-//		LOG.debug("programL2Flow_pathChange_X() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		LOG.debug("programL2Flow_pathChange_X() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 /* [2] IF) PACKET 들어온 해당 ovs가 FOG_SERVER가 동작할 위치인지 확인. 즉, ovsId == runningFogOvsId 인지 확인. */
 		String switchNodeId = SMS_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
-		String switchOutputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
-		LOG.debug("switchNodeId = {} | switchOutputPort = {}", switchNodeId, switchOutputPort);
+		String switchInputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
+//		LOG.debug("switchNodeId = {} | switchOutputPort = {}", switchNodeId, switchOutputPort);
 		
 		
     	/* Programming a flow involves:
@@ -370,6 +370,6 @@ public class TutorialL2Forwarding_ProgramL2Flow {
         
 		
 
-		LOG.debug("programL2Flow_pathChange_X() ------------------------------------------------------");
+//		LOG.debug("programL2Flow_pathChange_X() ------------------------------------------------------");
     }
 }
