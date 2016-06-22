@@ -26,7 +26,3 @@ git_help.sh
 sms_mornitoring
 admin/log/*.log
 admin/*.txt
-learning-switch/implementation/src/main/yang-gen-config
-tapapp/implementation/src/main/yang-gen-config
-acl/implementation/src/main/yang-gen-config
-acl
