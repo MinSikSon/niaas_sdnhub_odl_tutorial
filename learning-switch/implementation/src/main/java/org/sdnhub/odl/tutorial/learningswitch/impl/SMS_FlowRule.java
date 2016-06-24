@@ -8,7 +8,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.DropActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.drop.action._case.DropActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
@@ -56,6 +58,40 @@ public class SMS_FlowRule {
 
 		isb.setInstruction(instructions);
 		return isb;
+	}
+	
+	public static InstructionsBuilder createSentToControllerInsturctions(){
+		// test multitude "Action"
+		List<Action> actionList = new ArrayList<Action>();												// (1)
+		ActionBuilder ab = new ActionBuilder();															// (2)
+		
+		OutputActionBuilder oab = new OutputActionBuilder();												// (3)
+		oab.setMaxLength(65535);																				// (3) - 1
+		
+		Uri value = new Uri("CONTROLLER");																	// (4)
+		oab.setOutputNodeConnector(value);																	// (3) - 2
+		ab.setAction(new OutputActionCaseBuilder().setOutputAction(oab.build()).build());			// (2) - 1 && (3) - 2
+		ab.setOrder(0);																						// (2) - 2
+		ab.setKey(new ActionKey(0));																		// (2) - 3
+		actionList.add(ab.build());																			// (1) - 1 && (2) - 4
+		
+		// Create an Apply Action
+		ApplyActionsBuilder aab = new ApplyActionsBuilder();												// (5)
+		aab.setAction(actionList);																			// (5) - 1 && (1) - 2
+		
+		// Wrap our Apply Action in an Instruction
+		InstructionBuilder ib = new InstructionBuilder();												// (6)
+		ib.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(aab.build()).build());		// (6) - 1 && (5) - 2
+		ib.setOrder(0);																						// (6) - 2
+		ib.setKey(new InstructionKey(0));																	// (6) - 3
+		
+		// Put our Instruction in a list of Instructions
+		InstructionsBuilder isb = new InstructionsBuilder();												// (7)
+		List<Instruction> instructions = new ArrayList<Instruction>();									// (8)
+		instructions.add(ib.build());																		// (8) - 1 && (6) - 4
+		
+		isb.setInstruction(instructions);																	// (7) - 1
+		return isb;																							// (7) - 2
 	}
 	
 	public static InstructionsBuilder createInsturctions_flood(NodeConnectorId ingressNodeConnectorId,  Map<String, NodeConnectorId> macTable){
@@ -130,5 +166,35 @@ public class SMS_FlowRule {
 
 		isb.setInstruction(instructions);
 		return isb;
+	}
+	public static InstructionsBuilder createInsturctions_Drop(){
+		// Instructions List Stores Individual Instructions
+		ActionBuilder ab = new ActionBuilder();																// (5)
+		List<Action> actionList = Lists.newArrayList();														// (6)
+		
+		DropActionBuilder dab = new DropActionBuilder();
+		
+		ab.setAction(new DropActionCaseBuilder().setDropAction(dab.build()).build());
+		ab.setOrder(0);																							// (5) - 2
+		ab.setKey(new ActionKey(0));																			// (5) - 3
+		
+		actionList.add(ab.build());																				// (6) - 1 && (5) - 4
+		
+		ApplyActionsBuilder aab = new ApplyActionsBuilder();													// (7)
+		aab.setAction(actionList);																				// (7) - 1 && (6) - 2
+				
+		// Create Apply Actions Instruction
+		InstructionBuilder ib = new InstructionBuilder();													// (2)
+		ib.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(aab.build()).build());			// (2) - 1 && (7) - 2
+		ib.setOrder(0);																							// (2) - 2
+		ib.setKey(new InstructionKey(0));																		// (2) - 3
+		
+		// Put our Instruction in a list of Instructions
+		InstructionsBuilder isb = new InstructionsBuilder();													// (4)
+		List<Instruction> instructions = Lists.newArrayList();												// (3)
+		instructions.add(ib.build());																			// (3) - 1 && (2) - 4																// (7) - 1
+
+		isb.setInstruction(instructions);
+		return isb;																							// (7) - 2
 	}
 }

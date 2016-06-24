@@ -30,6 +30,189 @@ import org.slf4j.LoggerFactory;
 
 public class TutorialL2Forwarding_ProgramL2Flow {
 	private static int cookie = 0;
+
+	/**
+	* [CLOUD_SERVER -> FOG_SERVER] 로의 경로 변경 flow_rule을 ovs에 내리기 위해 사용.
+	* 
+	* @parameter: NodeId nodeId
+	* @parameter: DataBroker dataBroker
+	* @parameter: String fogServerIp
+	* @parameter: String fogServerMac
+	* @parameter: String fogSwitchOutputPort
+ 	* @parameter: String cloudServerIp
+ 	* @parameter: String cloudServerMac
+	* @return: void
+	*/
+	public static void programL2Flow_pathChange_CloudToFog(NodeId nodeId, DataBroker dataBroker, 
+			String fogServerIp, String fogServerMac, String fogSwitchOutputPort,
+			String cloudServerIp, String cloudServerMac,
+			String srcMac)
+	{
+		final Logger LOG = LoggerFactory.getLogger(TutorialL2Forwarding_ProgramL2Flow.class);
+		LOG.debug("programL2Flow_pathChange_CloudToFog() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+		// Creating match object
+		MatchBuilder matchBuilder = new MatchBuilder();		
+//		SMS_MatchUtils.createEthDstIpv4Match(matchBuilder, new MacAddress(cloudServerMac), null);
+		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(srcMac), new MacAddress(cloudServerMac), null);
+//		SMS_MatchUtils.createEthDstEthSrcMatch(matchBuilder, new MacAddress(srcMac), new MacAddress(cloudServerMac), null);
+		// Create Flow
+		FlowBuilder flowBuilder = new FlowBuilder();
+		flowBuilder.setMatch(matchBuilder.build());
+		
+		String flowId = "L2_Rule_CloudToFog";
+		flowBuilder.setId(new FlowId(flowId));
+		FlowKey key = new FlowKey(new FlowId(flowId));
+		flowBuilder.setBarrier(true);
+		flowBuilder.setTableId((short) 0);
+		flowBuilder.setKey(key);
+		flowBuilder.setPriority(30);
+//		flowBuilder.setPriority(130);
+		flowBuilder.setFlowName(flowId);
+		flowBuilder.setIdleTimeout(1800);
+		flowBuilder.setHardTimeout(3600);
+		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x11111111))));
+		MacAddress mac = new MacAddress(fogServerMac);
+		Ipv4Prefix ip = new Ipv4Prefix(fogServerIp + "/0");
+		flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, fogSwitchOutputPort).build());
+		
+		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
+				.child(Node.class, new NodeKey(nodeId))
+				.augmentation(FlowCapableNode.class)
+				.child(Table.class, new TableKey(flowBuilder.getTableId()))
+				.child(Flow.class, flowBuilder.getKey())
+				.build();
+		GenericTransactionUtils.writeData(dataBroker, LogicalDatastoreType.CONFIGURATION, flowIID, flowBuilder.build(), true);
+	}
+	/**
+	* [CLOUD_SERVER -> FOG_SERVER] 로의 경로 변경 flow_rule을 ovs에 내리기 위해 사용.
+	* 
+	* @parameter: NodeId nodeId
+	* @parameter: DataBroker dataBroker
+	* @parameter: String fogServerIp
+	* @parameter: String fogServerMac
+	* @parameter: String fogSwitchOutputPort
+ 	* @parameter: String cloudServerIp
+ 	* @parameter: String cloudServerMac
+	* @return: void
+	*/
+	public static void programL2Flow_pathChange_FogToCloud(NodeId nodeId, DataBroker dataBroker, 
+			String fogServerIp, String fogServerMac, String fogSwitchOutputPort,
+			String cloudServerIp, String cloudServerMac, String modOutputPort,
+			String srcMac)
+	{
+		final Logger LOG = LoggerFactory.getLogger(TutorialL2Forwarding_ProgramL2Flow.class);
+		LOG.debug("programL2Flow_pathChange_FogToCloud() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+		// Creating match object
+		MatchBuilder matchBuilder = new MatchBuilder();
+//		MatchUtils.createEthSrcMatch(matchBuilder, new MacAddress(fogServerMac));
+//		SMS_MatchUtils.createEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac));
+		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac), new MacAddress(srcMac), null);
+//		SMS_MatchUtils.createEthDstEthSrcMatch(matchBuilder, new MacAddress(fogServerMac), new MacAddress(srcMac), null);
+		
+		// Create Flow
+		FlowBuilder flowBuilder = new FlowBuilder();
+		flowBuilder.setMatch(matchBuilder.build());
+		
+		String flowId = "L2_Rule_FogToCloud";
+		flowBuilder.setId(new FlowId(flowId));
+		FlowKey key = new FlowKey(new FlowId(flowId));
+		flowBuilder.setBarrier(true);
+		flowBuilder.setTableId((short) 0);
+		flowBuilder.setKey(key);
+		flowBuilder.setPriority(30);
+//		flowBuilder.setPriority(130);
+		flowBuilder.setFlowName(flowId);
+		flowBuilder.setIdleTimeout(1800);
+		flowBuilder.setHardTimeout(3600);
+		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x22222222))));
+		MacAddress mac = new MacAddress(cloudServerMac);
+		Ipv4Prefix ip = new Ipv4Prefix(cloudServerIp + "/0");
+//		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_Instructions(mac, ip).build());
+		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, modOutputPort).build());
+		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
+				.child(Node.class, new NodeKey(nodeId))
+				.augmentation(FlowCapableNode.class)
+				.child(Table.class, new TableKey(flowBuilder.getTableId()))
+				.child(Flow.class, flowBuilder.getKey())
+				.build();
+		GenericTransactionUtils.writeData(dataBroker, LogicalDatastoreType.CONFIGURATION, flowIID, flowBuilder.build(), true);
+	}
+	
+	public static void programL2Flow_initSwitch_1(byte[] payload, NodeId nodeId, DataBroker dataBroker){
+		final Logger LOG = LoggerFactory.getLogger(TutorialL2Forwarding_ProgramL2Flow.class);
+		int LOG_TITLE = 0;
+		int LOG_programL2Flow = 0;
+		
+		LOG.debug("programL2Flow_initSwitch_1() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+		// Creating match object
+		MatchBuilder matchBuilder = new MatchBuilder();														// (1)
+		
+		// Create Flow
+		FlowBuilder flowBuilder = new FlowBuilder();															// (9)
+		flowBuilder.setMatch(matchBuilder.build());															// (9) - 1 && (1) - 3
+		
+		String flowId = "L2_Rule_Drop";																			// (10)
+		flowBuilder.setId(new FlowId(flowId));																	// (9) - 2
+		FlowKey key = new FlowKey(new FlowId(flowId));														// (11)
+		flowBuilder.setBarrier(true);																			// (9) - 3
+		flowBuilder.setTableId((short) 0);																		// (9) - 4
+		flowBuilder.setKey(key);																					// (9) - 5
+		flowBuilder.setPriority(0);																			// (9) - 6
+		flowBuilder.setFlowName(flowId);																		// (9) - 7
+		flowBuilder.setHardTimeout(0);																			// (9) - 8
+		flowBuilder.setIdleTimeout(0);																			// (9) - 9
+		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x33333331))));
+		
+		flowBuilder.setInstructions(SMS_FlowRule.createInsturctions_Drop().build());
+		
+		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
+				.child(Node.class, new NodeKey(nodeId))
+				.augmentation(FlowCapableNode.class)
+				.child(Table.class, new TableKey(flowBuilder.getTableId()))
+				.child(Flow.class, flowBuilder.getKey())
+				.build();
+		GenericTransactionUtils.writeData(dataBroker, LogicalDatastoreType.CONFIGURATION, flowIID, flowBuilder.build(), true);
+	}
+	public static void programL2Flow_initSwitch_2(byte[] payload, NodeId nodeId, DataBroker dataBroker){
+		final Logger LOG = LoggerFactory.getLogger(TutorialL2Forwarding_ProgramL2Flow.class);
+		int LOG_TITLE = 0;
+		int LOG_programL2Flow = 0;
+		
+		LOG.debug("programL2Flow_initSwitch_2() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+		// Creating match object
+		MatchBuilder matchBuilder = new MatchBuilder();														// (1)
+		SMS_MatchUtils.createLLDPMatch(matchBuilder);		
+		
+		// Create Flow
+		FlowBuilder flowBuilder = new FlowBuilder();															// (9)
+		flowBuilder.setMatch(matchBuilder.build());															// (9) - 1 && (1) - 3
+		
+		String flowId = "L2_Rule_0x88cc";																			// (10)
+		flowBuilder.setId(new FlowId(flowId));																	// (9) - 2
+		FlowKey key = new FlowKey(new FlowId(flowId));														// (11)
+		flowBuilder.setBarrier(true);																			// (9) - 3
+		flowBuilder.setTableId((short) 0);																		// (9) - 4
+		flowBuilder.setKey(key);																					// (9) - 5
+		flowBuilder.setPriority(100);																			// (9) - 6
+		flowBuilder.setFlowName(flowId);																		// (9) - 7
+		flowBuilder.setHardTimeout(0);																			// (9) - 8
+		flowBuilder.setIdleTimeout(0);																			// (9) - 9
+		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x33333332))));
+		
+		flowBuilder.setInstructions(SMS_FlowRule.createSentToControllerInsturctions().build());
+		
+		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
+				.child(Node.class, new NodeKey(nodeId))
+				.augmentation(FlowCapableNode.class)
+				.child(Table.class, new TableKey(flowBuilder.getTableId()))
+				.child(Flow.class, flowBuilder.getKey())
+				.build();
+		GenericTransactionUtils.writeData(dataBroker, LogicalDatastoreType.CONFIGURATION, flowIID, flowBuilder.build(), true);
+	}
 	
 	public static void programL2Flow_pathChange_O(byte[] payload, NodeId nodeId, 
 			String srcIp, String dstIp, String srcMac, String dstMac, 
@@ -117,7 +300,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 //				modSwitchNodeId = SMS_InventoryUtils.getSwitchNodeId(nodeConnectorId);
 //				modOutputPort = SMS_InventoryUtils.getOutputPort(nodeConnectorId);
 //				LOG.debug("[CASE 1 - status] {} | {} | {} | {} | {}", mac, ip, nodeConnectorId, modSwitchNodeId, modOutputPort);
-//				InstructionsBuilder isb = SMS_FlowMod.create_DlDst_NwDst_Instructions(mac, ip, modOutputPort);
+//				InstructionsBuilder isb = SMS_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, modOutputPort);
 //				flowBuilder.setInstructions(isb.build());
 //	//					flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_Instructions(mac, ip).build());
 //	//					if(LOG_programL2Flow == 1) LOG.debug("[SMS| TEST 1] sw {}, output {}", modSwitchNodeId, modOutputPort);
@@ -225,7 +408,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 				
 				MOD_OutputPort = SMS_InventoryUtils.getOutputPort(fogNodeConnectorId); // extract MOD_outputPort
 				LOG.debug("[CASE 1 - status] {} | {} | {} | {}", mac, ip, switchNodeId, MOD_OutputPort);
-				flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_Instructions(mac, ip, MOD_OutputPort).build());
+				flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, MOD_OutputPort).build());
 				
 				InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 						.child(Node.class, new NodeKey(nodeId))
@@ -255,7 +438,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 				
 				MOD_OutputPort = SMS_InventoryUtils.getOutputPort(macTable.get(dstMac)); // 원래 outputPort 그대로 사용
 				LOG.debug("[CASE 2 - status] {} | {} | {} | {}", mac, ip, switchNodeId, MOD_OutputPort);
-				flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_Instructions(mac, ip, MOD_OutputPort).build());
+				flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, MOD_OutputPort).build());
 				
 				InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 						.child(Node.class, new NodeKey(nodeId))
@@ -294,8 +477,6 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		
 		LOG.debug("programL2Flow_pathChange_O() ------------------------------------------------------");
     }
-	
-	
 	public static void programL2Flow_pathChange_X(byte[] payload, NodeId nodeId, 
 			String srcIp, String dstIp,	String srcMac, String dstMac, 
 			NodeConnectorId ingressNodeConnectorId, NodeConnectorId egressNodeConnectorId, 

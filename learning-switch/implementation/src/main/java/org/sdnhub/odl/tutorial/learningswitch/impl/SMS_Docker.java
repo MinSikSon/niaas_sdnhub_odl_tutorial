@@ -20,66 +20,20 @@ import org.slf4j.LoggerFactory;
 
 public class SMS_Docker {
 	/**
-	 * FOG_SERVER가 동작할 ovs의 id를 확인해고, 해당 id를 ArrayList에 저장.
-	 * 
-	 * @parameter: ArrayList<String> fogServerOvsIdList
-	 * @return: void
-	 */
-	public static void addFogServerOvsIdToList(ArrayList<String> fogServerOvsIdList){
-//		final Logger LOG = LoggerFactory.getLogger(SMS_Docker.class);
-//		LOG.debug("addFogServerOvsIdToList()++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-		BufferedReader br = null;
-		try {
-			br = new BufferedReader(new FileReader("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/FOG_SERVER_OVS_ID.txt"));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		while(true){
-			String line = null;
-			try {
-				line = br.readLine();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if (line == null)
-				break;
-			boolean check = checkFogServerIpExistInArray(fogServerOvsIdList, line);
-			
-			if(check == false) fogServerOvsIdList.add(line);
-		}
-//		for(int i = 0 ; i < fogServerOvsIdList.size() ; i++){
-//			System.out.println(fogServerOvsIdList.get(i));
-//		}
-//		LOG.debug("addFogServerOvsIdToList()------------------------------------------------------------");
-	}
-	
-	/**
-	 * addFogServerOvsIdToList()에서 사용. ArrayList에 fogServerOvsId에 해당하는 값이 존재하는지 확인.
-	 * 
-	 * @parameter: ArrayList<String> fogServerOvsIdList, 
-	 * @parameter: String fogServerOvsId, 
-	 * @return: boolean
-	 */
-	public static boolean checkFogServerOvsIdExistInArray(ArrayList<String> fogServerOvsIdList, String fogServerOvsId) {
-		boolean check = fogServerOvsIdList.contains(fogServerOvsId);
-		return check;
-	}
-	
-	/**
 	 * FOG_SERVER에서 docker container가 동작중인지 확인하고, 해당 ip를 ArrayList.
 	 * 
 	 * @parameter: ArrayList<String> fogServerDockerList
 	 * @return: void
 	 */
 //	private static ArrayList<String> fogServerDockerList = new ArrayList<String>();
-	public static void addFogServerIpToList(ArrayList<String> fogServerDockerList){
+	public static void addFogServerIpToList(ArrayList<String> fogServer_Ip_List){
 //		final Logger LOG = LoggerFactory.getLogger(SMS_Docker.class);
 //		LOG.debug("addFogServerIpToList()++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 //		int exist = 0;
 		try {
-			Process process = Runtime.getRuntime().exec("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/GET_DOCKER_STATUS.sh DOCKER_SWITCH_IP.txt");
+			Process process = Runtime.getRuntime().exec("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/GET_DOCKER_STATUS.sh "
+					+ "/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/DOCKER_SWITCH_IP.txt");
+			
 			process.getErrorStream().close();
 			process.getInputStream().close();
 			process.getOutputStream().close();
@@ -160,9 +114,9 @@ public class SMS_Docker {
 							/*-
 							 *  ip주소가 FOG_SERVER ip list와 겹치는지 검사 후, 겹치지 않으면 삽입.
 							 */
-							boolean check = checkFogServerIpExistInArray(fogServerDockerList, ip);
+							boolean check = checkFogServerIpExistInArray(fogServer_Ip_List, ip);
 //							System.out.println(check);
-							if(check == false) fogServerDockerList.add(ip);
+							if(check == false) fogServer_Ip_List.add(ip);
 //							System.out.println("[ipAddr] : " + ipAddr[0] + "." + ipAddr[1] + "." + ipAddr[2] + "." + ipAddr[3]);
 							ip = ipAddr[0] + "." + ipAddr[1] + "." + ipAddr[2] + "." + ipAddr[3];
 //							System.out.println(ip);
@@ -193,8 +147,111 @@ public class SMS_Docker {
 	 * @parameter: String fogServerIp,
 	 * @return: boolean
 	 */
-	public static boolean checkFogServerIpExistInArray(ArrayList<String> fogServerDockerList, String fogServerIp){
-		boolean check = fogServerDockerList.contains(fogServerIp);
+	public static boolean checkFogServerIpExistInArray(ArrayList<String> fogServer_Ip_List, String fogServerIp){
+		boolean check = fogServer_Ip_List.contains(fogServerIp);
 		return check;
 	}
+	
+	
+	/**
+	* CLOUD_SERVER ip를 확인해고, 해당 ip를 ArrayList에 저장.
+	* 
+	* @parameter: ArrayList<String> cloudServer_Ip_List
+	* @return: void
+	*/
+	public static void addCloudServerIpToList(ArrayList<String> cloudServer_Ip_List){
+//		final Logger LOG = LoggerFactory.getLogger(SMS_Docker.class);
+//		LOG.debug("addFogServerOvsIdToList()++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/CLOUD_SERVER_IP.txt"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		while(true){
+			String line = null;
+			try {
+				line = br.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (line == null)
+				break;
+			boolean check = checkCloudServerIpExistInArray(cloudServer_Ip_List, line);
+			if(check == false) cloudServer_Ip_List.add(line);
+		}
+//		for(int i = 0 ; i < fogServerOvsIdList.size() ; i++){
+//			System.out.println(fogServerOvsIdList.get(i));
+//		}
+//		LOG.debug("addFogServerOvsIdToList()------------------------------------------------------------");
+	}
+	
+	/**
+	* addCloudServerIpToList()에서 사용. ArrayList에 cloudServerIp에 해당하는 값이 존재하는지 확인.
+	* 
+	* @parameter: ArrayList<String> cloudServer_Ip_List, 
+	* @parameter: String cloudServerIp, 
+	* @return: boolean
+	*/
+	public static boolean checkCloudServerIpExistInArray(ArrayList<String> cloudServer_Ip_List, String cloudServerIp) {
+		boolean check = cloudServer_Ip_List.contains(cloudServerIp);
+		return check;
+	}
+	
+	
+	///**
+	//* FOG_SERVER가 동작할 ovs의 id를 확인해고, 해당 id를 ArrayList에 저장.
+	//* 
+	//* @parameter: ArrayList<String> fogServerOvsIdList
+	//* @return: void
+	//*/
+	//public static void addFogServerOvsIdToList(ArrayList<String> fogServerOvsIdList){
+////		final Logger LOG = LoggerFactory.getLogger(SMS_Docker.class);
+////		LOG.debug("addFogServerOvsIdToList()++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//		BufferedReader br = null;
+//		try {
+//			br = new BufferedReader(new FileReader("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/FOG_SERVER_OVS_ID.txt"));
+//		} catch (FileNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		while(true){
+//			String line = null;
+//			try {
+//				line = br.readLine();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			if (line == null)
+//				break;
+//			boolean check = checkFogServerIpExistInArray(fogServerOvsIdList, line);
+//			
+//			if(check == false) fogServerOvsIdList.add(line);
+//		}
+////		for(int i = 0 ; i < fogServerOvsIdList.size() ; i++){
+////			System.out.println(fogServerOvsIdList.get(i));
+////		}
+////		LOG.debug("addFogServerOvsIdToList()------------------------------------------------------------");
+	//}
+	//
+	///**
+	//* addFogServerOvsIdToList()에서 사용. ArrayList에 fogServerOvsId에 해당하는 값이 존재하는지 확인.
+	//* 
+	//* @parameter: ArrayList<String> fogServerOvsIdList, 
+	//* @parameter: String fogServerOvsId, 
+	//* @return: boolean
+	//*/
+	//public static boolean checkFogServerOvsIdExistInArray(ArrayList<String> fogServerOvsIdList, String fogServerOvsId) {
+//		boolean check = fogServerOvsIdList.contains(fogServerOvsId);
+//		return check;
+	//}
 }
+
+
+
+
+
+

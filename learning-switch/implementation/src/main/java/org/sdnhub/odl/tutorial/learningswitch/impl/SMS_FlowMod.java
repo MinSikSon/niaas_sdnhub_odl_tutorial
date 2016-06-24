@@ -34,7 +34,7 @@ import com.google.common.collect.Lists;
 
 public class SMS_FlowMod {
 //	public static InstructionsBuilder create_DlDst_NwDst_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst) {
-	public static InstructionsBuilder create_DlDst_NwDst_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst, String outputPort) {
+	public static InstructionsBuilder create_DlDst_NwDst_outputPort_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst, String outputPort) {
 		// ActionList
 		List<Action> actionList = Lists.newArrayList();
 		// Action 1
@@ -90,7 +90,7 @@ public class SMS_FlowMod {
 	}
 	// createDlSrcInstructions(InstructionBuilder ib, MacAddress macAddress) {
 //	public static InstructionsBuilder create_DlSrc_NwSrc_Instructions(MacAddress macAddress, Ipv4Prefix prefixSrc) {
-	public static InstructionsBuilder create_DlSrc_NwSrc_Instructions(MacAddress macAddress, Ipv4Prefix prefixSrc, String outputPort) {
+	public static InstructionsBuilder create_DlSrc_NwSrc_outputPort_Instructions(MacAddress macAddress, Ipv4Prefix prefixSrc, String outputPort) {
 		// ActionList
 		List<Action> actionList = Lists.newArrayList();
 		// Action 1
@@ -123,6 +123,49 @@ public class SMS_FlowMod {
 		actionList.add(ab.build());
 		actionList.add(ab2.build());
 		actionList.add(ab3.build());
+		// Action End
+
+		// Create an Apply Action
+		ApplyActionsBuilder aab = new ApplyActionsBuilder();
+		aab.setAction(actionList);
+
+		// Wrap our Apply Action in an Instruction
+		InstructionBuilder ib = new InstructionBuilder();
+		ib.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(aab.build()).build());
+		ib.setOrder(0);
+		ib.setKey(new InstructionKey(0));
+
+		// Put our Instruction in a list of Instructions
+		InstructionsBuilder isb = new InstructionsBuilder();
+		List<Instruction> instructions = new ArrayList<Instruction>();
+		instructions.add(ib.build());
+		isb.setInstruction(instructions);
+		return isb;
+	}
+	
+	public static InstructionsBuilder create_DlSrc_NwSrc_Instructions(MacAddress macAddress, Ipv4Prefix prefixSrc) {
+		// ActionList
+		List<Action> actionList = Lists.newArrayList();
+		// Action 1
+		ActionBuilder ab = new ActionBuilder();
+		SetDlSrcActionBuilder dlSrcActionBuilder = new SetDlSrcActionBuilder();
+		dlSrcActionBuilder.setAddress(macAddress);
+		ab.setAction(new SetDlSrcActionCaseBuilder().setSetDlSrcAction(dlSrcActionBuilder.build()).build());
+		ab.setOrder(0);
+		ab.setKey(new ActionKey(0));
+
+		// Action 2
+		ActionBuilder ab2 = new ActionBuilder();
+		SetNwSrcActionBuilder setNwsrcActionBuilder = new SetNwSrcActionBuilder();
+		Ipv4Builder ipsrc = new Ipv4Builder();
+		ipsrc.setIpv4Address(prefixSrc);
+		setNwsrcActionBuilder.setAddress(ipsrc.build());
+		ab2.setAction(new SetNwSrcActionCaseBuilder().setSetNwSrcAction(setNwsrcActionBuilder.build()).build());
+		ab2.setOrder(1);
+		ab2.setKey(new ActionKey(1));
+
+		actionList.add(ab.build());
+		actionList.add(ab2.build());
 		// Action End
 
 		// Create an Apply Action
