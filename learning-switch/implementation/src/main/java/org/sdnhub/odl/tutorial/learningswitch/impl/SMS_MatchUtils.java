@@ -70,6 +70,31 @@ public class SMS_MatchUtils {
 
 		return matchBuilder;
     }
+    
+    public static MatchBuilder createEthDstEthSrcIpv4InportMatch(MatchBuilder matchBuilder, MacAddress sMacAddr, MacAddress dMacAddr, MacAddress mask, NodeConnectorId ncId) {
+
+		EthernetMatchBuilder ethernetMatch = new EthernetMatchBuilder();
+		
+		EthernetSourceBuilder ethSourceBuilder = new EthernetSourceBuilder();
+		ethSourceBuilder.setAddress(new MacAddress(sMacAddr));
+		ethernetMatch.setEthernetSource(ethSourceBuilder.build());
+
+		EthernetDestinationBuilder ethDestinationBuilder = new EthernetDestinationBuilder();
+		ethDestinationBuilder.setAddress(new MacAddress(dMacAddr));
+		if (mask != null) {
+			ethDestinationBuilder.setMask(mask);
+		}
+		ethernetMatch.setEthernetDestination(ethDestinationBuilder.build());
+		matchBuilder.setEthernetMatch(ethernetMatch.build());
+
+		EthernetTypeBuilder ethTypeBuilder = new EthernetTypeBuilder();
+		ethTypeBuilder.setType(new EtherType(IPV4_LONG));
+		ethernetMatch.setEthernetType(ethTypeBuilder.build());
+		matchBuilder.setEthernetMatch(ethernetMatch.build());
+
+		matchBuilder.setInPort(ncId); // createInPortMatch
+		return matchBuilder;
+    }
 	
     public static MatchBuilder createEthDstEthSrcMatch(MatchBuilder matchBuilder, MacAddress sMacAddr, MacAddress dMacAddr, MacAddress mask) {
 

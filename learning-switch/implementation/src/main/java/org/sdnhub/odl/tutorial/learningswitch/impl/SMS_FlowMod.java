@@ -7,6 +7,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.DropActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.FloodActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetDlDstActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetDlSrcActionCaseBuilder;
@@ -14,6 +15,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.acti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.SetNwSrcActionCaseBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.drop.action._case.DropAction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.drop.action._case.DropActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.flood.action._case.FloodActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.dl.dst.action._case.SetDlDstActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.set.dl.src.action._case.SetDlSrcActionBuilder;
@@ -115,11 +117,15 @@ public class SMS_FlowMod {
 		// Action 3
 		ActionBuilder ab3 = new ActionBuilder();
 		OutputActionBuilder outputActionBuilder = new OutputActionBuilder();
-		outputActionBuilder.setOutputNodeConnector(new Uri("output:"+outputPort));
+		if(outputPort.equals("4294967291")){
+			outputActionBuilder.setOutputNodeConnector(new Uri("FLOOD"));
+		}else{
+			outputActionBuilder.setOutputNodeConnector(new Uri("output:"+outputPort));
+		}
 		ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
 		ab3.setOrder(2);
 		ab3.setKey(new ActionKey(2));
-
+		
 		actionList.add(ab.build());
 		actionList.add(ab2.build());
 		actionList.add(ab3.build());
@@ -143,7 +149,7 @@ public class SMS_FlowMod {
 		return isb;
 	}
 	
-	public static InstructionsBuilder create_DlSrc_NwSrc_Instructions(MacAddress macAddress, Ipv4Prefix prefixSrc) {
+	public static InstructionsBuilder create_DlSrc_NwSrc_Controller_Instructions(MacAddress macAddress, Ipv4Prefix prefixSrc) {
 		// ActionList
 		List<Action> actionList = Lists.newArrayList();
 		// Action 1
@@ -164,8 +170,19 @@ public class SMS_FlowMod {
 		ab2.setOrder(1);
 		ab2.setKey(new ActionKey(1));
 
+		// Action 3
+		ActionBuilder ab3 = new ActionBuilder();
+		OutputActionBuilder oab = new OutputActionBuilder();
+		oab.setMaxLength(65535);
+		Uri value = new Uri("CONTROLLER");
+		oab.setOutputNodeConnector(value);
+		ab3.setAction(new OutputActionCaseBuilder().setOutputAction(oab.build()).build());
+		ab3.setOrder(2);
+		ab3.setKey(new ActionKey(2));
+		
 		actionList.add(ab.build());
 		actionList.add(ab2.build());
+		actionList.add(ab3.build());
 		// Action End
 
 		// Create an Apply Action
@@ -199,6 +216,40 @@ public class SMS_FlowMod {
 		ab.setKey(new ActionKey(0));
 		
 		actionList.add(ab.build());
+
+		// Create an Apply Action
+		ApplyActionsBuilder aab = new ApplyActionsBuilder();
+		aab.setAction(actionList);
+
+		// Wrap our Apply Action in an Instruction
+		InstructionBuilder ib = new InstructionBuilder();
+		ib.setInstruction(new ApplyActionsCaseBuilder().setApplyActions(aab.build()).build());
+		ib.setOrder(0);
+		ib.setKey(new InstructionKey(0));
+
+		// Put our Instruction in a list of Instructions
+		InstructionsBuilder isb = new InstructionsBuilder();
+		List<Instruction> instructions = new ArrayList<Instruction>();
+		instructions.add(ib.build());
+		isb.setInstruction(instructions);
+		return isb;
+	}
+	
+	public static InstructionsBuilder createControllerInstructions() {
+		// ActionList
+		List<Action> actionList = Lists.newArrayList();
+		// Action 1
+		ActionBuilder ab = new ActionBuilder();
+		OutputActionBuilder oab = new OutputActionBuilder();
+		oab.setMaxLength(65535);
+		Uri value = new Uri("CONTROLLER");
+		oab.setOutputNodeConnector(value);
+		ab.setAction(new OutputActionCaseBuilder().setOutputAction(oab.build()).build());
+		ab.setOrder(0);
+		ab.setKey(new ActionKey(0));
+		
+		actionList.add(ab.build());
+		// Action End
 
 		// Create an Apply Action
 		ApplyActionsBuilder aab = new ApplyActionsBuilder();

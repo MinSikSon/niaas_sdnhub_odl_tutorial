@@ -53,9 +53,8 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 
 		// Creating match object
 		MatchBuilder matchBuilder = new MatchBuilder();		
-//		SMS_MatchUtils.createEthDstIpv4Match(matchBuilder, new MacAddress(cloudServerMac), null);
-		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(srcMac), new MacAddress(cloudServerMac), null);
-//		SMS_MatchUtils.createEthDstEthSrcMatch(matchBuilder, new MacAddress(srcMac), new MacAddress(cloudServerMac), null);
+		SMS_MatchUtils.createEthDstIpv4Match(matchBuilder, new MacAddress(cloudServerMac), null);
+//		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(srcMac), new MacAddress(cloudServerMac), null);
 		// Create Flow
 		FlowBuilder flowBuilder = new FlowBuilder();
 		flowBuilder.setMatch(matchBuilder.build());
@@ -106,10 +105,8 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 
 		// Creating match object
 		MatchBuilder matchBuilder = new MatchBuilder();
-//		MatchUtils.createEthSrcMatch(matchBuilder, new MacAddress(fogServerMac));
-//		SMS_MatchUtils.createEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac));
-		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac), new MacAddress(srcMac), null);
-//		SMS_MatchUtils.createEthDstEthSrcMatch(matchBuilder, new MacAddress(fogServerMac), new MacAddress(srcMac), null);
+		SMS_MatchUtils.createEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac));
+//		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac), new MacAddress(srcMac), null);
 		
 		// Create Flow
 		FlowBuilder flowBuilder = new FlowBuilder();
@@ -127,6 +124,51 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		flowBuilder.setIdleTimeout(1800);
 		flowBuilder.setHardTimeout(3600);
 		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x22222222))));
+		MacAddress mac = new MacAddress(cloudServerMac);
+		Ipv4Prefix ip = new Ipv4Prefix(cloudServerIp + "/0");
+//		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_Controller_Instructions(mac, ip).build());
+//		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, modOutputPort).build());
+		flowBuilder.setInstructions(SMS_FlowMod.createControllerInstructions().build());
+		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
+				.child(Node.class, new NodeKey(nodeId))
+				.augmentation(FlowCapableNode.class)
+				.child(Table.class, new TableKey(flowBuilder.getTableId()))
+				.child(Flow.class, flowBuilder.getKey())
+				.build();
+		GenericTransactionUtils.writeData(dataBroker, LogicalDatastoreType.CONFIGURATION, flowIID, flowBuilder.build(), true);
+	}
+	
+	public static void programL2Flow_pathChange_FogToCloud_2(NodeId nodeId, DataBroker dataBroker, 
+			String fogServerIp, String fogServerMac, String fogSwitchOutputPort, NodeConnectorId fogNodeConnectorId,
+			String cloudServerIp, String cloudServerMac, String modOutputPort,
+			String dstMac)
+	{
+		final Logger LOG = LoggerFactory.getLogger(TutorialL2Forwarding_ProgramL2Flow.class);
+		LOG.debug("programL2Flow_pathChange_FogToCloud() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+		// Creating match object
+		MatchBuilder matchBuilder = new MatchBuilder();
+//		SMS_MatchUtils.createEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac));
+//		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac), new MacAddress(dstMac), null);
+		SMS_MatchUtils.createEthDstEthSrcIpv4InportMatch(matchBuilder, new MacAddress(fogServerMac), new MacAddress(dstMac), null, fogNodeConnectorId);
+		
+		// Create Flow
+		FlowBuilder flowBuilder = new FlowBuilder();
+		flowBuilder.setMatch(matchBuilder.build());
+		
+		String flowId = "L2_Rule_"+modOutputPort;
+		flowBuilder.setId(new FlowId(flowId));
+		FlowKey key = new FlowKey(new FlowId(flowId));
+		flowBuilder.setBarrier(true);
+		flowBuilder.setTableId((short) 0);
+		flowBuilder.setKey(key);
+		flowBuilder.setPriority(35);
+//		flowBuilder.setPriority(130);
+		flowBuilder.setFlowName(flowId);
+		flowBuilder.setIdleTimeout(1800);
+		flowBuilder.setHardTimeout(3600);
+		cookie++;
+		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x22222222+cookie))));
 		MacAddress mac = new MacAddress(cloudServerMac);
 		Ipv4Prefix ip = new Ipv4Prefix(cloudServerIp + "/0");
 //		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_Instructions(mac, ip).build());
