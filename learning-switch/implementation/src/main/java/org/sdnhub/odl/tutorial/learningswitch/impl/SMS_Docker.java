@@ -87,7 +87,7 @@ public class SMS_Docker {
 //				System.out.println("[tokens1 value] " + value1);
 				
 				StringTokenizer tokens2 = new StringTokenizer(value1, ", ");
-				if(tokens2.countTokens() > 2){
+//				if(tokens2.countTokens() > 2){
 //					System.out.println("<");
 //					System.out.println("[token2 count] " + tokens2.countTokens());
 					while(true){
@@ -114,18 +114,16 @@ public class SMS_Docker {
 							/*-
 							 *  ip주소가 FOG_SERVER ip list와 겹치는지 검사 후, 겹치지 않으면 삽입.
 							 */
-							boolean check = checkFogServerIpExistInArray(fogServer_Ip_List, ip);
-//							System.out.println(check);
-							if(check == false) fogServer_Ip_List.add(ip);
-//							System.out.println("[ipAddr] : " + ipAddr[0] + "." + ipAddr[1] + "." + ipAddr[2] + "." + ipAddr[3]);
 							ip = ipAddr[0] + "." + ipAddr[1] + "." + ipAddr[2] + "." + ipAddr[3];
+							boolean check = checkFogServerIpExistInArray(fogServer_Ip_List, ip);
+							if(check == false) fogServer_Ip_List.add(ip);
 //							System.out.println(ip);
 //							System.out.println(">>");
 						}
 						if(tokens2.countTokens() == 0) break;
 					}
 //					System.out.println(">");
-				}
+//				}
 				if(tokens1.countTokens() == 0) break;
 			}
 //			System.out.println("--------------------------");

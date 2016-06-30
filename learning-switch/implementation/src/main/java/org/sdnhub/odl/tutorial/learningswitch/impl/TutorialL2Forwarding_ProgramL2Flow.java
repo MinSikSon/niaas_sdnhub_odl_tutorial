@@ -73,6 +73,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x11111111))));
 		MacAddress mac = new MacAddress(fogServerMac);
 		Ipv4Prefix ip = new Ipv4Prefix(fogServerIp + "/0");
+//		flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_controller_Instructions(mac, ip, fogSwitchOutputPort).build());
 		flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, fogSwitchOutputPort).build());
 		
 		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
@@ -450,6 +451,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 				
 				MOD_OutputPort = SMS_InventoryUtils.getOutputPort(fogNodeConnectorId); // extract MOD_outputPort
 				LOG.debug("[CASE 1 - status] {} | {} | {} | {}", mac, ip, switchNodeId, MOD_OutputPort);
+//				flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_controller_Instructions(mac, ip, MOD_OutputPort).build());
 				flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, MOD_OutputPort).build());
 				
 				InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)

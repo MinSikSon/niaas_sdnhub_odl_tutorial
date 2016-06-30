@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 public class SMS_FlowMod {
 //	public static InstructionsBuilder create_DlDst_NwDst_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst) {
 	public static InstructionsBuilder create_DlDst_NwDst_outputPort_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst, String outputPort) {
+//	public static InstructionsBuilder create_DlDst_NwDst_outputPort_controller_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst, String outputPort) {
 		// ActionList
 		List<Action> actionList = Lists.newArrayList();
 		// Action 1
@@ -65,11 +66,21 @@ public class SMS_FlowMod {
 		outputActionBuilder.setOutputNodeConnector(new Uri("output:"+outputPort));
 		ab3.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder.build()).build());
 		ab3.setOrder(2);
-		ab3.setKey(new ActionKey(2));		
+		ab3.setKey(new ActionKey(2));
+		
+//		// Action 4
+//		ActionBuilder ab4 = new ActionBuilder();
+//		OutputActionBuilder outputActionBuilder2 = new OutputActionBuilder();
+//		outputActionBuilder2.setMaxLength(65535);
+//		outputActionBuilder2.setOutputNodeConnector(new Uri("CONTROLLER"));
+//		ab4.setAction(new OutputActionCaseBuilder().setOutputAction(outputActionBuilder2.build()).build());
+//		ab4.setOrder(3);
+//		ab4.setKey(new ActionKey(3));
 		
 		actionList.add(ab.build());
 		actionList.add(ab2.build());
 		actionList.add(ab3.build());
+//		actionList.add(ab4.build());
 		// Action End
 
 		// Create an Apply Action

@@ -234,7 +234,8 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			
 			srcMac = PacketParsingUtils.rawMacToString(srcMacRaw);
 			dstMac = PacketParsingUtils.rawMacToString(dstMacRaw);
-
+			NodeConnectorId egressNodeConnectorId = macTable[switchNodeId_number].get(dstMac);
+			
 // SMS NIaaS: init
 			//SMS: Extract IP address
 			srcIp = SMS_Parser_IpAddr.ipAddr_byteArray_to_stringIp(SMS_Parser_IpAddr.get_byteArray_SrcIp(payload));
@@ -257,90 +258,93 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 // SMS NIaaS END
 			
 			
-// SMS NIaaS: macTable[0] 에는 모든 ovs의 MAC-ingressNodeConnectorId 정보를 저장
-			this.macTable[0].put(srcMac, ingressNodeConnectorId);
-			setTotal = macTable[0].entrySet();
-			itTotal = setTotal.iterator();
-			Map.Entry<String, NodeConnectorId> eTotal;
-			BufferedWriter macTableOutTotal = null;
-			String macTableNameTotal = "mactable_0.log";
-			try {
-				macTableOutTotal = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/"+macTableNameTotal));
-				while(itTotal.hasNext()) {							
-					eTotal = (Map.Entry<String, NodeConnectorId>)itTotal.next();
-					String txt = "|key: " + eTotal.getKey() + "\t|value: " + eTotal.getValue();
-					macTableOutTotal.write(txt);
-					macTableOutTotal.newLine();
+
+	// SMS NIaaS: macTable[0] 에는 모든 ovs의 MAC-ingressNodeConnectorId 정보를 저장
+				this.macTable[0].put(srcMac, ingressNodeConnectorId);
+				setTotal = macTable[0].entrySet();
+				itTotal = setTotal.iterator();
+				Map.Entry<String, NodeConnectorId> eTotal;
+				BufferedWriter macTableOutTotal = null;
+				String macTableNameTotal = "mactable_0.log";
+				try {
+					macTableOutTotal = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/"+macTableNameTotal));
+					while(itTotal.hasNext()) {							
+						eTotal = (Map.Entry<String, NodeConnectorId>)itTotal.next();
+						String txt = "|key: " + eTotal.getKey() + "\t|value: " + eTotal.getValue();
+						macTableOutTotal.write(txt);
+						macTableOutTotal.newLine();
+					}
+					macTableOutTotal.close();
+				} catch (IOException e3) {
+					// TODO Auto-generated catch block
+					e3.printStackTrace();
 				}
-				macTableOutTotal.close();
-			} catch (IOException e3) {
-				// TODO Auto-generated catch block
-				e3.printStackTrace();
-			}
-// SMS NIaaS END
-			NodeConnectorId egressNodeConnectorId = macTable[switchNodeId_number].get(dstMac);
-// SMS NIaaS: macTable
-			/* [c.f.] macTable에는 srcMac과 ingressNodeConnectorId가 매핑 되어 있다. */
-			// TODO: Learn source MAC address (2.2 - 1)
-			byte[] ttlRaw = PacketParsingUtils.extractIpHeaderTTL(payload);
-			String ttl = PacketParsingUtils.rawttlToString(ttlRaw);
-			LOG.debug("=====================================================================================");
-			LOG.debug("1>  srcMac: {}  | dstMac: {}  | ethType: {}  | ttl: {}  | SMS_COUNT_COUNT: {}", srcMac, dstMac, stringEtherTypeHex, ttl, SMS_COUNT_COUNT);	
-			SMS_COUNT_COUNT++;
-			this.macTable[switchNodeId_number].put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
-//			this.macTableDst[switchNodeId_number].put(dstMac, egressNodeConnectorId); // V
-//			this.macTableDst[switchNodeId_number].put(srcMac, floodNodeConnectorId); // V
-//			LOG.debug("2>  ingressNodeConnectorId: {}",ingressNodeConnectorId);
-//				LOG.debug("(switchNodeId: {} | switchInputPort: {})", switchNodeId, switchInputPort);
-			set = macTable[switchNodeId_number].entrySet();
-//			set1 = macTableDst[switchNodeId_number].entrySet(); // V
-			it = set.iterator();
-//			it1 = set1.iterator();
-//			Map.Entry<String, NodeConnectorId> e;
-			BufferedWriter macTableOut = null;
-			String macTableName = "mactable_"+switchNodeId_number+".log";
-			try {
-				macTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/"+macTableName));
-				while(it.hasNext()) {							
-					e = (Map.Entry<String, NodeConnectorId>)it.next();
-					String txt = "|key: " + e.getKey() + "\t|value: " + e.getValue();
-					macTableOut.write(txt);
-					macTableOut.newLine();
+	// SMS NIaaS END
+				
+	// SMS NIaaS: macTable
+				/* [c.f.] macTable에는 srcMac과 ingressNodeConnectorId가 매핑 되어 있다. */
+				// TODO: Learn source MAC address (2.2 - 1)
+				byte[] ttlRaw = PacketParsingUtils.extractIpHeaderTTL(payload);
+				String ttl = PacketParsingUtils.rawttlToString(ttlRaw);
+				LOG.debug("=====================================================================================");
+				LOG.debug("1>  srcMac: {}  | dstMac: {}  | ethType: {}  | ttl: {}  | SMS_COUNT_COUNT: {}", srcMac, dstMac, stringEtherTypeHex, ttl, SMS_COUNT_COUNT);	
+				SMS_COUNT_COUNT++;
+				this.macTable[switchNodeId_number].put(srcMac, ingressNodeConnectorId); // SMS : Map<String, NodeConnectorId> macTable
+	//			this.macTableDst[switchNodeId_number].put(dstMac, egressNodeConnectorId); // V
+	//			this.macTableDst[switchNodeId_number].put(srcMac, floodNodeConnectorId); // V
+	//			LOG.debug("2>  ingressNodeConnectorId: {}",ingressNodeConnectorId);
+	//				LOG.debug("(switchNodeId: {} | switchInputPort: {})", switchNodeId, switchInputPort);
+				set = macTable[switchNodeId_number].entrySet();
+	//			set1 = macTableDst[switchNodeId_number].entrySet(); // V
+				it = set.iterator();
+	//			it1 = set1.iterator();
+	//			Map.Entry<String, NodeConnectorId> e;
+				BufferedWriter macTableOut = null;
+				String macTableName = "mactable_"+switchNodeId_number+".log";
+				try {
+					macTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/"+macTableName));
+					while(it.hasNext()) {							
+						e = (Map.Entry<String, NodeConnectorId>)it.next();
+						String txt = "|key: " + e.getKey() + "\t|value: " + e.getValue();
+						macTableOut.write(txt);
+						macTableOut.newLine();
+					}
+	//				macTableOut.write("////////////////////////////////////////////////");
+	//				macTableOut.newLine();
+	//				while(it1.hasNext()) {							
+	//					e1 = (Map.Entry<String, NodeConnectorId>)it1.next();
+	//					String txt = "|key: " + e1.getKey() + "\t|value: " + e1.getValue();
+	//					macTableOut.write(txt);
+	//					macTableOut.newLine();
+	//				}
+					macTableOut.close();
+				} catch (IOException e3) {
+					// TODO Auto-generated catch block
+					e3.printStackTrace();
 				}
-//				macTableOut.write("////////////////////////////////////////////////");
-//				macTableOut.newLine();
-//				while(it1.hasNext()) {							
-//					e1 = (Map.Entry<String, NodeConnectorId>)it1.next();
-//					String txt = "|key: " + e1.getKey() + "\t|value: " + e1.getValue();
-//					macTableOut.write(txt);
-//					macTableOut.newLine();
-//				}
-				macTableOut.close();
-			} catch (IOException e3) {
-				// TODO Auto-generated catch block
-				e3.printStackTrace();
-			}
-// SMS NIaaS END
-		
-/* [1] srcIp와 srcMac를 매핑한 후 ipMacTable에 저장. */
-// SMS NIaaS: ipMacTable
-			this.ipMacTable.put(srcIp, srcMac);
-			set2 = ipMacTable.entrySet();
-			it2 = set2.iterator();
-//			Map.Entry<String, String> e2;
-			BufferedWriter ipMacTableOut = null;
-			try {
-				ipMacTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/ipmactable.log"));
-				while(it2.hasNext()) {
-					e2 = (Map.Entry<String, String>)it2.next();
-					String txt = "|key: " + e2.getKey() + "    \t|value: " + e2.getValue();
-					ipMacTableOut.write(txt);
-					ipMacTableOut.newLine();
+	// SMS NIaaS END
+			
+			if (etherType == 0x800) {
+	/* [1] srcIp와 srcMac를 매핑한 후 ipMacTable에 저장. */
+	// SMS NIaaS: ipMacTable
+				this.ipMacTable.put(srcIp, srcMac);
+				set2 = ipMacTable.entrySet();
+				it2 = set2.iterator();
+	//			Map.Entry<String, String> e2;
+				BufferedWriter ipMacTableOut = null;
+				try {
+					ipMacTableOut = new BufferedWriter(new FileWriter("/home/sms/workspace/SDNHub_Opendaylight_Tutorial/admin/log/ipmactable.log"));
+					while(it2.hasNext()) {
+						e2 = (Map.Entry<String, String>)it2.next();
+						String txt = "|key: " + e2.getKey() + "    \t|value: " + e2.getValue();
+						ipMacTableOut.write(txt);
+						ipMacTableOut.newLine();
+					}
+					ipMacTableOut.close();
+				} catch (IOException e3) {
+					// TODO Auto-generated catch block
+					e3.printStackTrace();
 				}
-				ipMacTableOut.close();
-			} catch (IOException e3) {
-				// TODO Auto-generated catch block
-				e3.printStackTrace();
 			}
 // SMS NIaaS END
 			
@@ -356,50 +360,63 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			
 /* [3]   IF) docker img가 FOG_SERVER 상에 배포되어 docker container가 동작 중인지 확인. (e.g. 10.0.0.10) */
 // SMS NIaaS
-							FOG_SERVER_IP_ON = 0;
-							if(fogServer_Ip_List.isEmpty()){
-								FOG_SERVER_IP_ON = 0;
-							}else{
-								for(String list: fogServer_Ip_List){
-									fogServerIp = list; 
-									fogServerMac = ipMacTable.get(fogServerIp); 
-									if(fogServerMac != null){ // fogServerIp
-										fogNodeConnectorId = macTable[switchNodeId_number].get(fogServerMac); 
-										if(fogNodeConnectorId != null){ // fogServerMac
-											fogSwitchNodeId = SMS_InventoryUtils.getSwitchNodeId(fogNodeConnectorId); // openflow:x
-											fogSwitchOutputPort = SMS_InventoryUtils.getOutputPort(fogNodeConnectorId); // fogSwitchOutputPort
-											if(switchNodeId.equals(fogSwitchNodeId)) {
-												FOG_SERVER_IP_ON = 1;
-												break;
-											}
-										}
-									}
-								}
-							}
-							CLOUD_SERVER_IP_ON = 0;
-							if(cloudServer_Ip_List.isEmpty()){
-								CLOUD_SERVER_IP_ON = 0;
-							}else{
-								cloudServerIp = cloudServer_Ip_List.get(0); // cloudServerIp
-								cloudServerMac = ipMacTable.get(cloudServerIp); // cloudServerMac
-								if(cloudServerMac != null){
-									cloudNodeConnectorId = macTable[switchNodeId_number].get(cloudServerMac); 
-									if(fogNodeConnectorId != null){ // cloudServerMac
-										CLOUD_SERVER_IP_ON = 1;
-									}
-								}
-							}
-// SMS NIaaS END	
-			// TODO: If found (2.3.1)
-			if(egressNodeConnectorId != null){
-				// TODO: 2.3.1.1 perform FLOW_MOD for that dst_mac through the target node connector								
 			
+//			String switchNodeId = null;
+//			if(egressNodeConnectorId != null){
+//				switchNodeId = SMS_InventoryUtils.getSwitchNodeId(egressNodeConnectorId);
+//			}
+			FOG_SERVER_IP_ON = 0;
+			if(fogServer_Ip_List.isEmpty()){
+				FOG_SERVER_IP_ON = 0;
+			}else{
+				for(String list: fogServer_Ip_List){
+					fogServerIp = list; 
+					fogServerMac = ipMacTable.get(fogServerIp); 
+					LOG.debug("*> fogServerIp: {} | fogServerMac: {}",fogServerIp,fogServerMac);
+					if(fogServerMac != null){ // fogServerIp
+						fogNodeConnectorId = macTable[switchNodeId_number].get(fogServerMac);
+						LOG.debug("**> fogNodeConnectorId: {}",fogNodeConnectorId);
+						if(fogNodeConnectorId != null){ // fogServerMac
+							fogSwitchNodeId = SMS_InventoryUtils.getSwitchNodeId(fogNodeConnectorId); // openflow:x
+							fogSwitchOutputPort = SMS_InventoryUtils.getOutputPort(fogNodeConnectorId); // fogSwitchOutputPort
+							LOG.debug("***> switchNodeId: {} | fogSwitchNodeId: {}",switchNodeId,fogSwitchNodeId);
+							if(switchNodeId.equals(fogSwitchNodeId)) {
+								LOG.debug("****> fogServerMac: {} | fogNodeConnectorId: {} | switchNodeId: {} | fogSwitchNodeId: {}",
+										fogServerMac, fogNodeConnectorId, switchNodeId, fogSwitchNodeId);
+								FOG_SERVER_IP_ON = 1;
+								break;
+							}
+						}
+					}
+				}
+			}
+			CLOUD_SERVER_IP_ON = 0;
+			if(cloudServer_Ip_List.isEmpty()){
+				CLOUD_SERVER_IP_ON = 0;
+			}else{
+				cloudServerIp = cloudServer_Ip_List.get(0); // cloudServerIp
+				cloudServerMac = ipMacTable.get(cloudServerIp); // cloudServerMac
+				if(cloudServerMac != null){
+//									cloudNodeConnectorId = macTable[0].get(cloudServerMac); 
+//									if(fogNodeConnectorId != null){ // cloudServerMac
+						CLOUD_SERVER_IP_ON = 1;
+//									}
+				}
+			}
+// SMS NIaaS END	
+
 // FOG_SERVER_OVS_ID_CHECK과 DOCKER_SWITCH_CHECK 둘다 1일 경우, 임시로 수동으로 openflow:1과 10.0.0.10을 매핑.
 // 나중에는 자동으로 인지하고 매핑하도록 해야함.
 // SMS NiaaS: set up "FLOW_RULE" to ovs
+			LOG.debug("4> fogServerIp: {} | fogServerMac: {} | fogSwitchOutputPort: {} | cloudServerIp: {} | cloudServerMac: {}",
+					fogServerIp, fogServerMac, fogSwitchOutputPort, cloudServerIp, cloudServerMac);
+			LOG.debug(" > FOG_SERVER_IP_ON: {} | CLOUD_SERVER_IP_ON: {}", FOG_SERVER_IP_ON, CLOUD_SERVER_IP_ON);
+			LOG.debug("5> switchNodeId {} | fogSwitchNodeId {}", switchNodeId, fogSwitchNodeId);
+			// TODO: If found (2.3.1)
+			if(egressNodeConnectorId != null){
+				// TODO: 2.3.1.1 perform FLOW_MOD for that dst_mac through the target node connector
+				LOG.debug("6-1>  ");
 				if(stringEtherTypeHex.equals("0800")){
-					LOG.debug("4> fogServerIp: {} | fogServerMac: {} | fogSwitchOutputPort: {} | cloudServerIp: {} | cloudServerMac: {}",
-							fogServerIp, fogServerMac, fogSwitchOutputPort, cloudServerIp, cloudServerMac);
 					if(FOG_SERVER_IP_ON == 1 && CLOUD_SERVER_IP_ON == 1){
 						if(srcMac.equals(cloudServerMac)){
 							;
@@ -408,13 +425,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 									fogServerIp, fogServerMac, fogSwitchOutputPort, fogNodeConnectorId,
 									cloudServerIp, cloudServerMac, SMS_InventoryUtils.getOutputPort(egressNodeConnectorId),
 									dstMac);
-	//						}else if(srcMac.equals(cloudServerMac) && dstMac.equals(fogServerMac)){
-	//							;
-	//						}else if(srcMac.equals(fogServerMac) && dstMac.equals(cloudServerMac)){
-	//							;
 						}else {
-							LOG.debug("5> switchNodeId {} | fogSwitchNodeId {}", switchNodeId, fogSwitchNodeId);
-							LOG.debug("6> FOG_SERVER_IP_ON( {})", FOG_SERVER_IP_ON);
 							TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_CloudToFog(ingressNodeId, dataBroker,
 									fogServerIp, fogServerMac, fogSwitchOutputPort,
 									cloudServerIp, cloudServerMac,
@@ -436,9 +447,8 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 				packetOut(egressNodeRef, egressNodeConnectorRef, payload);
 			}
 			else if(egressNodeConnectorId_macTable0 != null){
+				LOG.debug("6-2>  ");
 				if(stringEtherTypeHex.equals("0800")){
-					LOG.debug("4-2> fogServerIp: {} | fogServerMac: {} | fogSwitchOutputPort: {} | cloudServerIp: {} | cloudServerMac: {}",
-							fogServerIp, fogServerMac, fogSwitchOutputPort, cloudServerIp, cloudServerMac);
 					if(FOG_SERVER_IP_ON == 1 && CLOUD_SERVER_IP_ON == 1){
 						if(srcMac.equals(cloudServerMac)){
 							;
@@ -447,13 +457,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 									fogServerIp, fogServerMac, fogSwitchOutputPort, fogNodeConnectorId,
 									cloudServerIp, cloudServerMac, "4294967291", // flood
 									dstMac);
-	//						}else if(srcMac.equals(cloudServerMac) && dstMac.equals(fogServerMac)){
-	//							;
-	//						}else if(srcMac.equals(fogServerMac) && dstMac.equals(cloudServerMac)){
-	//							;
 						}else {
-							LOG.debug("5-2> switchNodeId {} | fogSwitchNodeId {}", switchNodeId, fogSwitchNodeId);
-							LOG.debug("6-2> FOG_SERVER_IP_ON( {})", FOG_SERVER_IP_ON);
 							TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_CloudToFog(ingressNodeId, dataBroker,
 									fogServerIp, fogServerMac, fogSwitchOutputPort,
 									cloudServerIp, cloudServerMac,
@@ -473,7 +477,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			}
 			else{
             	// 2.3.2 Flood packet
-				LOG.debug("4-3>  floodNodeConnectorId: {}", floodNodeConnectorId); // SMS
+				LOG.debug("6-3>  floodNodeConnectorId: {}", floodNodeConnectorId); // SMS
 				packetOut(ingressNodeRef, floodNodeConnectorRef, payload);
 			}
 		}
