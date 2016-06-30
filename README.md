@@ -1,6 +1,10 @@
-MinSikSon
-============================
+# MinSikSon
+
 * 샘플 App 제작을 위해 SDNHub 에서 받은 single switch 소스 코드의 일부를 수정함.
+
+> 주로 아래 경로에 존재하는 source code 를 수정한다.
+
+> learning-switch/implementation/src/main/java/org/sdnhub/odl/tutorial/learningswitch/impl/
 
 * This is modified by MinSikSon.
 * This is sample application.
