@@ -3,7 +3,7 @@ package org.sdnhub.odl.tutorial.learningswitch.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SMS_Parser_IpAddr extends SMS_Parser{
+public abstract class Niaas_Parser_IpAddr extends Niaas_Parser{
 	private static final int IP_ADDRESS_SIZE = 4;
 //	private static int SRC_IP_START_POSITION;
 //	private static int SRC_IP_END_POSITION;
@@ -17,9 +17,9 @@ public abstract class SMS_Parser_IpAddr extends SMS_Parser{
      * @return byteArray_SrcIp[IP_ADDRESS_SIZE]
      */
 	public static byte[] get_byteArray_SrcIp(byte[] payload) {
-		String stringEtherTypeHex = SMS_Parser_MacAddr.get_stringEtherTypeHex(payload);
+		String stringEtherTypeHex = Niaas_Parser_MacAddr.get_stringEtherTypeHex(payload);
 		int LOG_TEST = 0; // SMS
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser_IpAddr.class);
 		byte[] byteArray_SrcIp = new byte[IP_ADDRESS_SIZE];
 		if(stringEtherTypeHex.equals("0800")){ // IPv4
 			if(LOG_TEST == 1) LOG.debug("  | srcIp: {}.{}.{}.{}", payload[26],payload[27],payload[28],payload[29]);
@@ -48,9 +48,9 @@ public abstract class SMS_Parser_IpAddr extends SMS_Parser{
      * @return byteArray_DstIp[IP_ADDRESS_SIZE]
      */
 	public static byte[] get_byteArray_DstIp(byte[] payload) {
-		String stringEtherTypeHex = SMS_Parser_MacAddr.get_stringEtherTypeHex(payload);
+		String stringEtherTypeHex = Niaas_Parser_MacAddr.get_stringEtherTypeHex(payload);
 		int LOG_TEST = 0; // SMS
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser_IpAddr.class);
 		byte[] byteArray_DstIp = new byte[IP_ADDRESS_SIZE];
 		if(stringEtherTypeHex.equals("0800")){ // IPv4
 			if(LOG_TEST == 1) LOG.debug("  | dstIp: {}.{}.{}.{}", payload[30],payload[31],payload[32],payload[33]);
@@ -79,7 +79,7 @@ public abstract class SMS_Parser_IpAddr extends SMS_Parser{
      * @return intArray[IP_ADDRESS_SIZE]
      */
 	public static int[] ipAddr_byteArray_to_intArray(byte[] byteArray){
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser_IpAddr.class);
 		int[] intArray = new int[IP_ADDRESS_SIZE];
 		if(byteArray.length != IP_ADDRESS_SIZE){
 			LOG.debug("(Error) ipAddr_byteArray_to_intArray");
@@ -96,7 +96,7 @@ public abstract class SMS_Parser_IpAddr extends SMS_Parser{
      * @return byteArray[IP_ADDRESS_SIZE]
      */
 	public static byte[] ipAddr_intArray_to_byteArray(int[] intArray){
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser_IpAddr.class);
 		byte[] byteArray = new byte[IP_ADDRESS_SIZE];
 		if(intArray.length != IP_ADDRESS_SIZE) {
 			LOG.debug("(Error) ipAddr_intArray_to_byteArray");
@@ -119,7 +119,7 @@ public abstract class SMS_Parser_IpAddr extends SMS_Parser{
      * @return intArray[IP_ADDRESS_SIZE]
      */
 	public static int[] ipAddr_stringIp_to_intArray(String stringIp){
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser_IpAddr.class);
 		int[] intArray = new int[IP_ADDRESS_SIZE];
 		String[] split_stringValue = stringIp.split("\\.");
 		// the number of "." is three.
@@ -138,7 +138,7 @@ public abstract class SMS_Parser_IpAddr extends SMS_Parser{
      * @return stringIp
      */
 	public static String ipAddr_intArray_to_stringIp(int[] intArray){
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser_IpAddr.class);
 		String stringIp;
 		if(intArray.length != IP_ADDRESS_SIZE) {
 			LOG.debug("(Error) ipAddr_intArray_to_byteArray");
@@ -169,7 +169,7 @@ public abstract class SMS_Parser_IpAddr extends SMS_Parser{
      * @return byteArray[IP_ADDRESS_SIZE]
      */
 	public static byte[] ipAddr_stringIp_to_byteArray(String stringIp) {
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser_IpAddr.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser_IpAddr.class);
 		byte[] byteArray = new byte[6];
 		String[] split_stringValue = stringIp.split("\\.");
 		if(split_stringValue.length != 6){

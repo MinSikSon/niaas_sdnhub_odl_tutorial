@@ -12,7 +12,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.Icmpv4MatchBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.IpMatchBuilder;
 
-public class SMS_MatchUtils {
+public class Niaas_MatchUtils {
 	public static final long IPV4_LONG = (long) 0x800;
 	public static final long LLDP_LONG = (long) 0x88CC;
 	

@@ -161,9 +161,9 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 		Iterator<Entry<String,String>> it2;
 		Map.Entry<String, String> e2;
 		// [2]
-		String switchNodeId = SMS_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
-		int switchNodeId_number = SMS_InventoryUtils.getSwitchNodeId_number(ingressNodeConnectorId);
-		String switchInputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
+		String switchNodeId = Niaas_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
+		int switchNodeId_number = Niaas_InventoryUtils.getSwitchNodeId_number(ingressNodeConnectorId);
+		String switchInputPort = Niaas_InventoryUtils.getOutputPort(ingressNodeConnectorId);
 		
 		// [2], [3]
 		int FOG_SERVER_IP_ON = 0;
@@ -172,7 +172,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 		String fogSwitchNodeId = "";
 		String fogSwitchOutputPort = "";
 		ArrayList<String> fogServer_Ip_List = new ArrayList<String>();
-		SMS_Docker.addFogServerIpToList(fogServer_Ip_List);
+		Niaas_Docker.addFogServerIpToList(fogServer_Ip_List);
 		int fogServerDockerList_count = 0;
 		String fogServerIp = "";
 		String fogServerMac = "";
@@ -183,7 +183,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 		String cloudSwitchNodeId = "";
 		String cloudSwitchOutputPort = "";
 		ArrayList<String> cloudServer_Ip_List = new ArrayList<String>();
-		SMS_Docker.addCloudServerIpToList(cloudServer_Ip_List); // 일단 CLOUD_SERVER는 한곳이다.
+		Niaas_Docker.addCloudServerIpToList(cloudServer_Ip_List); // 일단 CLOUD_SERVER는 한곳이다.
 		String cloudServerIp = "";
 		String cloudServerMac = "";
 // SMS NIaaS END
@@ -238,9 +238,9 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 			
 // SMS NIaaS: init
 			//SMS: Extract IP address
-			srcIp = SMS_Parser_IpAddr.ipAddr_byteArray_to_stringIp(SMS_Parser_IpAddr.get_byteArray_SrcIp(payload));
-			dstIp = SMS_Parser_IpAddr.ipAddr_byteArray_to_stringIp(SMS_Parser_IpAddr.get_byteArray_DstIp(payload));
-			stringEtherTypeHex = SMS_Parser_MacAddr.get_stringEtherTypeHex(payload);
+			srcIp = Niaas_Parser_IpAddr.ipAddr_byteArray_to_stringIp(Niaas_Parser_IpAddr.get_byteArray_SrcIp(payload));
+			dstIp = Niaas_Parser_IpAddr.ipAddr_byteArray_to_stringIp(Niaas_Parser_IpAddr.get_byteArray_DstIp(payload));
+			stringEtherTypeHex = Niaas_Parser_MacAddr.get_stringEtherTypeHex(payload);
 // SMS NIaaS END
 			
 // SMS NIaaS: init flow |  priority=0 actions=drop  ||  priority=100 dl_type=0x88cc actions=CONTROLLER:65535  |
@@ -377,8 +377,8 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 						fogNodeConnectorId = macTable[switchNodeId_number].get(fogServerMac);
 						LOG.debug("**> fogNodeConnectorId: {}",fogNodeConnectorId);
 						if(fogNodeConnectorId != null){ // fogServerMac
-							fogSwitchNodeId = SMS_InventoryUtils.getSwitchNodeId(fogNodeConnectorId); // openflow:x
-							fogSwitchOutputPort = SMS_InventoryUtils.getOutputPort(fogNodeConnectorId); // fogSwitchOutputPort
+							fogSwitchNodeId = Niaas_InventoryUtils.getSwitchNodeId(fogNodeConnectorId); // openflow:x
+							fogSwitchOutputPort = Niaas_InventoryUtils.getOutputPort(fogNodeConnectorId); // fogSwitchOutputPort
 							LOG.debug("***> switchNodeId: {} | fogSwitchNodeId: {}",switchNodeId,fogSwitchNodeId);
 							if(switchNodeId.equals(fogSwitchNodeId)) {
 								LOG.debug("****> fogServerMac: {} | fogNodeConnectorId: {} | switchNodeId: {} | fogSwitchNodeId: {}",
@@ -423,7 +423,7 @@ public class TutorialL2Forwarding  implements AutoCloseable, PacketProcessingLis
 						}else if(srcMac.equals(fogServerMac)){
 							TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_FogToCloud_2(ingressNodeId, dataBroker,
 									fogServerIp, fogServerMac, fogSwitchOutputPort, fogNodeConnectorId,
-									cloudServerIp, cloudServerMac, SMS_InventoryUtils.getOutputPort(egressNodeConnectorId),
+									cloudServerIp, cloudServerMac, Niaas_InventoryUtils.getOutputPort(egressNodeConnectorId),
 									dstMac);
 						}else {
 							TutorialL2Forwarding_ProgramL2Flow.programL2Flow_pathChange_CloudToFog(ingressNodeId, dataBroker,

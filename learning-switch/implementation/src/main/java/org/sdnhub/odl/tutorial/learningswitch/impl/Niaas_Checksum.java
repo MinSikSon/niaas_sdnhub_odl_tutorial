@@ -3,15 +3,15 @@ package org.sdnhub.odl.tutorial.learningswitch.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SMS_Checksum extends SMS_Parser_IpAddr{
-	private SMS_Checksum(){
+public abstract class Niaas_Checksum extends Niaas_Parser_IpAddr{
+	private Niaas_Checksum(){
 	}
 	/**
      * @param byteIpHeader
      * @return byteIpChecksumValue
      */
 	public static byte[] ipv4_Calculate_Checksum(byte[] byteIpHeader){
-		final Logger LOG = LoggerFactory.getLogger(SMS_Checksum.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Checksum.class);
 		int SMS_LOG = 0;
 		// variable
 		int[] intIpHeader = new int[20];

@@ -3,14 +3,14 @@ package org.sdnhub.odl.tutorial.learningswitch.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SMS_Parser {
+public abstract class Niaas_Parser {
 	
 	/**
      * @param intValue
      * @return byteValue
      */
 	public static byte int_to_byte(int intValue){
-		final Logger LOG = LoggerFactory.getLogger(SMS_Parser.class);
+		final Logger LOG = LoggerFactory.getLogger(Niaas_Parser.class);
 		if(-128 <= intValue && intValue <= 255) {
 			byte byteValue = (byte)intValue;
 			return byteValue;

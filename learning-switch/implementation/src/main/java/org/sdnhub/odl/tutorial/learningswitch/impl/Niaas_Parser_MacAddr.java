@@ -2,7 +2,7 @@ package org.sdnhub.odl.tutorial.learningswitch.impl;
 
 import java.util.Arrays;
 
-public abstract class SMS_Parser_MacAddr extends SMS_Parser{
+public abstract class Niaas_Parser_MacAddr extends Niaas_Parser{
 	private static final int MAC_ADDRESS_SIZE = 6;
 	private static final int DST_MAC_START_POSITION = 0;
 	private static final int DST_MAC_END_POSITION = 6;
@@ -10,7 +10,7 @@ public abstract class SMS_Parser_MacAddr extends SMS_Parser{
 	private static final int SRC_MAC_END_POSITION = 12;
 	private static final int ETHER_TYPE_START_POSITION = 12;
 	private static final int ETHER_TYPE_END_POSITION = 14;
-	private SMS_Parser_MacAddr(){
+	private Niaas_Parser_MacAddr(){
 	}
 	
 	/**

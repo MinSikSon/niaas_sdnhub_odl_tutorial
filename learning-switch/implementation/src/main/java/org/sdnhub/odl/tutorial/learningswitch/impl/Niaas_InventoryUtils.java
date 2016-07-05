@@ -2,7 +2,7 @@ package org.sdnhub.odl.tutorial.learningswitch.impl;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 
-public class SMS_InventoryUtils {
+public class Niaas_InventoryUtils {
 //	public static String getSwitchNodeId(NodeId ingressNodeId){
 //		String switchNodeId;
 //		

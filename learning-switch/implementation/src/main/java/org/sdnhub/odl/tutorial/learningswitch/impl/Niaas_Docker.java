@@ -18,7 +18,7 @@ import java.util.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SMS_Docker {
+public class Niaas_Docker {
 	/**
 	 * FOG_SERVER에서 docker container가 동작중인지 확인하고, 해당 ip를 ArrayList.
 	 * 

@@ -53,7 +53,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 
 		// Creating match object
 		MatchBuilder matchBuilder = new MatchBuilder();		
-		SMS_MatchUtils.createEthDstIpv4Match(matchBuilder, new MacAddress(cloudServerMac), null);
+		Niaas_MatchUtils.createEthDstIpv4Match(matchBuilder, new MacAddress(cloudServerMac), null);
 //		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(srcMac), new MacAddress(cloudServerMac), null);
 		// Create Flow
 		FlowBuilder flowBuilder = new FlowBuilder();
@@ -74,7 +74,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		MacAddress mac = new MacAddress(fogServerMac);
 		Ipv4Prefix ip = new Ipv4Prefix(fogServerIp + "/0");
 //		flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_controller_Instructions(mac, ip, fogSwitchOutputPort).build());
-		flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, fogSwitchOutputPort).build());
+		flowBuilder.setInstructions(Niaas_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, fogSwitchOutputPort).build());
 		
 		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 				.child(Node.class, new NodeKey(nodeId))
@@ -106,7 +106,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 
 		// Creating match object
 		MatchBuilder matchBuilder = new MatchBuilder();
-		SMS_MatchUtils.createEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac));
+		Niaas_MatchUtils.createEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac));
 //		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac), new MacAddress(srcMac), null);
 		
 		// Create Flow
@@ -129,7 +129,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		Ipv4Prefix ip = new Ipv4Prefix(cloudServerIp + "/0");
 //		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_Controller_Instructions(mac, ip).build());
 //		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, modOutputPort).build());
-		flowBuilder.setInstructions(SMS_FlowMod.createControllerInstructions().build());
+		flowBuilder.setInstructions(Niaas_FlowMod.createControllerInstructions().build());
 		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 				.child(Node.class, new NodeKey(nodeId))
 				.augmentation(FlowCapableNode.class)
@@ -151,7 +151,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		MatchBuilder matchBuilder = new MatchBuilder();
 //		SMS_MatchUtils.createEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac));
 //		SMS_MatchUtils.createEthDstEthSrcIpv4Match(matchBuilder, new MacAddress(fogServerMac), new MacAddress(dstMac), null);
-		SMS_MatchUtils.createEthDstEthSrcIpv4InportMatch(matchBuilder, new MacAddress(fogServerMac), new MacAddress(dstMac), null, fogNodeConnectorId);
+		Niaas_MatchUtils.createEthDstEthSrcIpv4InportMatch(matchBuilder, new MacAddress(fogServerMac), new MacAddress(dstMac), null, fogNodeConnectorId);
 		
 		// Create Flow
 		FlowBuilder flowBuilder = new FlowBuilder();
@@ -173,7 +173,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		MacAddress mac = new MacAddress(cloudServerMac);
 		Ipv4Prefix ip = new Ipv4Prefix(cloudServerIp + "/0");
 //		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_Instructions(mac, ip).build());
-		flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, modOutputPort).build());
+		flowBuilder.setInstructions(Niaas_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, modOutputPort).build());
 		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 				.child(Node.class, new NodeKey(nodeId))
 				.augmentation(FlowCapableNode.class)
@@ -209,7 +209,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		flowBuilder.setIdleTimeout(0);																			// (9) - 9
 		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x33333331))));
 		
-		flowBuilder.setInstructions(SMS_FlowRule.createInsturctions_Drop().build());
+		flowBuilder.setInstructions(Niaas_FlowRule.createInsturctions_Drop().build());
 		
 		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 				.child(Node.class, new NodeKey(nodeId))
@@ -228,7 +228,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 
 		// Creating match object
 		MatchBuilder matchBuilder = new MatchBuilder();														// (1)
-		SMS_MatchUtils.createLLDPMatch(matchBuilder);		
+		Niaas_MatchUtils.createLLDPMatch(matchBuilder);		
 		
 		// Create Flow
 		FlowBuilder flowBuilder = new FlowBuilder();															// (9)
@@ -246,7 +246,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		flowBuilder.setIdleTimeout(0);																			// (9) - 9
 		flowBuilder.setCookie(new FlowCookie(new BigInteger(Integer.toString(0x33333332))));
 		
-		flowBuilder.setInstructions(SMS_FlowRule.createSentToControllerInsturctions().build());
+		flowBuilder.setInstructions(Niaas_FlowRule.createSentToControllerInsturctions().build());
 		
 		InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 				.child(Node.class, new NodeKey(nodeId))
@@ -267,12 +267,12 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		// SMS: debug log
 		final Logger LOG = LoggerFactory.getLogger(TutorialL2Forwarding_ProgramL2Flow.class);
 		
-		String stringEtherTypeHex = SMS_Parser_MacAddr.get_stringEtherTypeHex(payload);
+		String stringEtherTypeHex = Niaas_Parser_MacAddr.get_stringEtherTypeHex(payload);
 	
 		LOG.debug("programL2Flow_pathChange_O() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 /* [2] IF) PACKET 들어온 해당 ovs가 FOG_SERVER가 동작할 위치인지 확인. 즉, ovsId == runningFogOvsId 인지 확인. */
-		String switchNodeId = SMS_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
-		String switchOutputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
+		String switchNodeId = Niaas_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
+		String switchOutputPort = Niaas_InventoryUtils.getOutputPort(ingressNodeConnectorId);
 		LOG.debug("switchNodeId = {}  |  switchOutputPort = {}", switchNodeId, switchOutputPort);
 
 //    	/* Programming a flow involves:
@@ -408,7 +408,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		
 		// Creating match object
 		MatchBuilder matchBuilder = new MatchBuilder();
-		SMS_MatchUtils.createEthDstEthSrcInPortMatch(matchBuilder, new MacAddress(srcMac), new MacAddress(dstMac), ingressNodeConnectorId);
+		Niaas_MatchUtils.createEthDstEthSrcInPortMatch(matchBuilder, new MacAddress(srcMac), new MacAddress(dstMac), ingressNodeConnectorId);
 		
 		// Create Flow
 		FlowBuilder flowBuilder = new FlowBuilder();
@@ -449,10 +449,10 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 
 				fogNodeConnectorId = macTable.get(strFogMacAddr); // openflow:x:x
 				
-				MOD_OutputPort = SMS_InventoryUtils.getOutputPort(fogNodeConnectorId); // extract MOD_outputPort
+				MOD_OutputPort = Niaas_InventoryUtils.getOutputPort(fogNodeConnectorId); // extract MOD_outputPort
 				LOG.debug("[CASE 1 - status] {} | {} | {} | {}", mac, ip, switchNodeId, MOD_OutputPort);
 //				flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_controller_Instructions(mac, ip, MOD_OutputPort).build());
-				flowBuilder.setInstructions(SMS_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, MOD_OutputPort).build());
+				flowBuilder.setInstructions(Niaas_FlowMod.create_DlDst_NwDst_outputPort_Instructions(mac, ip, MOD_OutputPort).build());
 				
 				InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 						.child(Node.class, new NodeKey(nodeId))
@@ -480,9 +480,9 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 				
 //				cloudNodeConnectorId = macTable.get(strCloudMacAddr); // openflow:x:x
 				
-				MOD_OutputPort = SMS_InventoryUtils.getOutputPort(macTable.get(dstMac)); // 원래 outputPort 그대로 사용
+				MOD_OutputPort = Niaas_InventoryUtils.getOutputPort(macTable.get(dstMac)); // 원래 outputPort 그대로 사용
 				LOG.debug("[CASE 2 - status] {} | {} | {} | {}", mac, ip, switchNodeId, MOD_OutputPort);
-				flowBuilder.setInstructions(SMS_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, MOD_OutputPort).build());
+				flowBuilder.setInstructions(Niaas_FlowMod.create_DlSrc_NwSrc_outputPort_Instructions(mac, ip, MOD_OutputPort).build());
 				
 				InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 						.child(Node.class, new NodeKey(nodeId))
@@ -502,7 +502,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 				
 				LOG.debug("[CASE 3] 일반 동작 (priority = 400 | cookie = 0x44444444)");
 				LOG.debug("[CASE 3 - status] {} | {}", switchNodeId, switchOutputPort);
-				flowBuilder.setInstructions(SMS_FlowRule.createInsturctions_One(egressNodeConnectorId).build());
+				flowBuilder.setInstructions(Niaas_FlowRule.createInsturctions_One(egressNodeConnectorId).build());
 				
 				InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 						.child(Node.class, new NodeKey(nodeId))
@@ -533,8 +533,8 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		
 		LOG.debug("programL2Flow_pathChange_X() ++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 /* [2] IF) PACKET 들어온 해당 ovs가 FOG_SERVER가 동작할 위치인지 확인. 즉, ovsId == runningFogOvsId 인지 확인. */
-		String switchNodeId = SMS_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
-		String switchInputPort = SMS_InventoryUtils.getOutputPort(ingressNodeConnectorId);
+		String switchNodeId = Niaas_InventoryUtils.getSwitchNodeId(ingressNodeConnectorId);
+		String switchInputPort = Niaas_InventoryUtils.getOutputPort(ingressNodeConnectorId);
 //		LOG.debug("switchNodeId = {} | switchOutputPort = {}", switchNodeId, switchOutputPort);
 		
 		
@@ -567,7 +567,7 @@ public class TutorialL2Forwarding_ProgramL2Flow {
 		
 		// * 에러) 패킷의 목적지의 nodeId와 현재의 nodeId가 다를 경우, outputPort를 지정할 때 에러가 생긴다.
 //		if(switchNodeId.equals(SMS_InventoryUtils.getSwitchNodeId(egressNodeConnectorId))){
-			flowBuilder.setInstructions(SMS_FlowRule.createInsturctions_One(egressNodeConnectorId).build());
+			flowBuilder.setInstructions(Niaas_FlowRule.createInsturctions_One(egressNodeConnectorId).build());
 			
 			InstanceIdentifier<Flow> flowIID = InstanceIdentifier.builder(Nodes.class)
 					.child(Node.class, new NodeKey(nodeId))

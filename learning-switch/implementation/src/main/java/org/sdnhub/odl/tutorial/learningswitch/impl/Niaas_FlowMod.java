@@ -34,7 +34,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.instru
 
 import com.google.common.collect.Lists;
 
-public class SMS_FlowMod {
+public class Niaas_FlowMod {
 //	public static InstructionsBuilder create_DlDst_NwDst_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst) {
 	public static InstructionsBuilder create_DlDst_NwDst_outputPort_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst, String outputPort) {
 //	public static InstructionsBuilder create_DlDst_NwDst_outputPort_controller_Instructions(MacAddress macAddress, Ipv4Prefix prefixDst, String outputPort) {
